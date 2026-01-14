@@ -970,7 +970,22 @@
                     updateGameModeDisplay();
                     updatePrivateModeDisplay();
                     startScoreboardAutoRefresh();
-                    setupRoomListener();
+                    
+                    // Wait for Firebase to be ready before setting up listener
+                    if (isFirebaseReady) {
+                        console.log('🔄 Resuming session - Setting up Firebase listener');
+                        setupRoomListener();
+                    } else {
+                        console.log('⏳ Waiting for Firebase connection before resuming...');
+                        // Wait for Firebase to connect
+                        const waitForFirebase = setInterval(() => {
+                            if (isFirebaseReady) {
+                                clearInterval(waitForFirebase);
+                                console.log('✅ Firebase ready - Setting up listener');
+                                setupRoomListener();
+                            }
+                        }, 100);
+                    }
                 }
             }
         }
@@ -1497,10 +1512,32 @@
                 return;
             }
             
-            console.log('Setting up Firebase listener for room:', gameState.roomCode);
+            console.log('🔥 Setting up Firebase listener for room:', gameState.roomCode);
             
             const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
             
+            // CRITICAL: Immediately fetch existing players first
+            roomRef.once('value', (snapshot) => {
+                const players = [];
+                snapshot.forEach((childSnapshot) => {
+                    const player = childSnapshot.val();
+                    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                    if (player.timestamp > fiveMinutesAgo) {
+                        players.push(player);
+                    }
+                });
+                
+                console.log('🔥 Initial Firebase load - Players:', players.map(p => `${p.name}(${p.score})`));
+                
+                // Update scoreboard with existing players immediately
+                updateScoreboardWithPlayers(players);
+                
+                // Update player count
+                document.getElementById('playerCount').textContent = 
+                    `عدد اللاعبين: ${players.length}`;
+            });
+            
+            // Then set up real-time listener for future changes
             roomRef.on('value', (snapshot) => {
                 const players = [];
                 snapshot.forEach((childSnapshot) => {
@@ -1511,7 +1548,7 @@
                     }
                 });
                 
-                console.log('Firebase listener update - Players:', players.map(p => `${p.name}(${p.score})`));
+                console.log('🔥 Firebase listener update - Players:', players.map(p => `${p.name}(${p.score})`));
                 
                 // Update scoreboard with all players
                 updateScoreboardWithPlayers(players);
