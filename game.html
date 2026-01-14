@@ -483,6 +483,12 @@
                     <span id="gameModeText">🎮 وضع عادي (يتحكم كل لاعب)</span>
                 </button>
             </div>
+            <div style="text-align: center; margin: 20px 0; color: #64748b;">خصوصية الغرفة</div>
+            <div class="game-mode-select">
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);" onclick="togglePrivateMode()">
+                    <span id="privateModeText">🌐 غرفة عامة (تظهر في القائمة)</span>
+                </button>
+            </div>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 20px;">🚪 مغادرة الغرفة</button>
         </div>
 
@@ -619,7 +625,8 @@
             score: 0,
             round: 0,
             isHost: false,
-            hostMode: false // false = user-controlled, true = host-controlled
+            hostMode: false, // false = user-controlled, true = host-controlled
+            isPrivate: false // false = public (appears in browser), true = private (code required)
         };
 
         // Simulate multiplayer with localStorage (for testing)
@@ -641,6 +648,7 @@
             gameState.score = 0;
             gameState.isHost = true;
             gameState.hostMode = false;
+            gameState.isPrivate = false;
             
             document.getElementById('roomCode').textContent = gameState.roomCode;
             document.getElementById('joinScreen').classList.add('hidden');
@@ -653,6 +661,14 @@
             addRoomToList();
             startScoreboardAutoRefresh();
             setupRoomListener();
+            
+            // Force initial scoreboard update for host
+            setTimeout(() => {
+                const allPlayers = isFirebaseReady ? [] : loadRoomScores();
+                if (allPlayers.length > 0) {
+                    updateScoreboardWithPlayers(allPlayers);
+                }
+            }, 500);
         }
 
         function joinRoom() {
@@ -687,6 +703,16 @@
             saveGameState();
             startScoreboardAutoRefresh();
             setupRoomListener();
+            
+            // Force initial scoreboard update
+            setTimeout(() => {
+                if (!isFirebaseReady) {
+                    const allPlayers = loadRoomScores();
+                    if (allPlayers.length > 0) {
+                        updateScoreboardWithPlayers(allPlayers);
+                    }
+                }
+            }, 500);
         }
 
         function showAvailableRooms() {
@@ -724,6 +750,11 @@
                         const roomCode = childSnapshot.key;
                         const roomData = childSnapshot.val();
                         
+                        // Skip private rooms
+                        if (roomData.metadata && roomData.metadata.isPrivate) {
+                            return;
+                        }
+                        
                         if (roomData.players) {
                             const players = Object.values(roomData.players);
                             const recentPlayers = players.filter(p => p.timestamp > oneHourAgo);
@@ -736,7 +767,7 @@
                                     code: roomCode,
                                     hostName: sortedPlayers[0].name,
                                     players: recentPlayers.length,
-                                    hostMode: roomData.hostMode || false,
+                                    hostMode: roomData.metadata?.hostMode || false,
                                     timestamp: sortedPlayers[0].timestamp
                                 });
                             }
@@ -812,6 +843,16 @@
             saveGameState();
             startScoreboardAutoRefresh();
             setupRoomListener();
+            
+            // Force initial scoreboard update
+            setTimeout(() => {
+                if (!isFirebaseReady) {
+                    const allPlayers = loadRoomScores();
+                    if (allPlayers.length > 0) {
+                        updateScoreboardWithPlayers(allPlayers);
+                    }
+                }
+            }, 500);
         }
 
         function getAllRooms() {
@@ -831,9 +872,10 @@
                 roomMetaRef.set({
                     hostName: gameState.playerName,
                     hostMode: gameState.hostMode,
+                    isPrivate: gameState.isPrivate,
                     timestamp: Date.now()
                 });
-                console.log('Room metadata saved to Firebase:', gameState.roomCode);
+                console.log('Room metadata saved to Firebase:', gameState.roomCode, '(Private:', gameState.isPrivate + ')');
             }
             
             // Also save to localStorage for backward compatibility
@@ -865,6 +907,18 @@
             saveGameState();
             addRoomToList();
         }
+        
+        function togglePrivateMode() {
+            if (!gameState.isHost) {
+                alert('فقط المضيف يمكنه تغيير خصوصية الغرفة');
+                return;
+            }
+            
+            gameState.isPrivate = !gameState.isPrivate;
+            updatePrivateModeDisplay();
+            saveGameState();
+            addRoomToList();
+        }
 
         function updateGameModeDisplay() {
             const modeText = document.getElementById('gameModeText');
@@ -872,6 +926,15 @@
                 modeText.textContent = '👑 وضع المضيف (يتحكم المضيف فقط)';
             } else {
                 modeText.textContent = '🎮 وضع عادي (يتحكم كل لاعب)';
+            }
+        }
+        
+        function updatePrivateModeDisplay() {
+            const privateText = document.getElementById('privateModeText');
+            if (gameState.isPrivate) {
+                privateText.textContent = '🔒 غرفة خاصة (الكود فقط)';
+            } else {
+                privateText.textContent = '🌐 غرفة عامة (تظهر في القائمة)';
             }
         }
 
@@ -905,6 +968,7 @@
                     updatePlayerCount();
                     updateScoreboard();
                     updateGameModeDisplay();
+                    updatePrivateModeDisplay();
                     startScoreboardAutoRefresh();
                     setupRoomListener();
                 }
@@ -1447,6 +1511,8 @@
                     }
                 });
                 
+                console.log('Firebase listener update - Players:', players.map(p => `${p.name}(${p.score})`));
+                
                 // Update scoreboard with all players
                 updateScoreboardWithPlayers(players);
                 
@@ -1535,10 +1601,23 @@
             // Update my score display
             myScoreEl.textContent = gameState.score;
             
-            console.log('Updating scoreboard with players:', players);
+            console.log('📊 Updating scoreboard with players:', players.map(p => `${p.name}(${p.score})`));
             
             // Update full scoreboard with all players
             scoreList.innerHTML = '';
+            
+            if (players.length === 0) {
+                // Show at least current player
+                const li = document.createElement('li');
+                li.className = 'score-item first';
+                li.innerHTML = `
+                    <span class="player-name" style="font-weight: bold; text-decoration: underline;">👑 ${gameState.playerName} (أنت)</span>
+                    <span class="player-score">${gameState.score}</span>
+                `;
+                scoreList.appendChild(li);
+                console.log('📊 Showing only current player (no other players yet)');
+                return;
+            }
             
             // Sort players by score
             const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -1557,6 +1636,8 @@
                 `;
                 scoreList.appendChild(li);
             });
+            
+            console.log('📊 Scoreboard updated with', sortedPlayers.length, 'players');
         }
 
         // Auto-refresh scoreboard every 2 seconds to show live updates
