@@ -1438,13 +1438,21 @@
         }
 
         function updateScoreboardWithPlayers(players) {
+            // Check if scoreboard elements exist (they won't on join screen)
+            const myScoreEl = document.getElementById('myScore');
+            const scoreList = document.getElementById('scoreList');
+            
+            if (!myScoreEl || !scoreList) {
+                console.log('Scoreboard elements not available yet');
+                return;
+            }
+            
             // Update my score display
-            document.getElementById('myScore').textContent = gameState.score;
+            myScoreEl.textContent = gameState.score;
             
             console.log('Updating scoreboard with players:', players);
             
             // Update full scoreboard with all players
-            const scoreList = document.getElementById('scoreList');
             scoreList.innerHTML = '';
             
             // Sort players by score
