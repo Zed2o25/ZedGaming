@@ -2,12 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#6366f1">
     <title>لعبة المجموعة - Group Game</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100'/><text y='75' font-size='70' text-anchor='middle' x='50' fill='white'>🎮</text></svg>">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -840,13 +842,18 @@
 
         function startColorGame() {
             gameState.round++;
-            showNextColor();
             
             // Show/hide next button based on host mode
             if (gameState.hostMode && gameState.isHost) {
                 document.getElementById('nextColorBtn').classList.remove('hidden');
-                
-                // Broadcast initial state to Firebase after color is set
+            } else {
+                document.getElementById('nextColorBtn').classList.add('hidden');
+            }
+            
+            showNextColor();
+            
+            // Broadcast initial state to Firebase after color is set
+            if (gameState.hostMode && gameState.isHost) {
                 setTimeout(() => {
                     if (isFirebaseReady && currentColor) {
                         const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
@@ -857,8 +864,6 @@
                         });
                     }
                 }, 2100);
-            } else {
-                document.getElementById('nextColorBtn').classList.add('hidden');
             }
         }
 
@@ -899,8 +904,8 @@
             saveGameState();
             
             // In user-controlled mode, automatically show next color
-            // hostMode false or undefined means user-controlled
-            if (gameState.hostMode !== true) {
+            // In host mode, wait for host to click next button
+            if (!gameState.hostMode) {
                 setTimeout(showNextColor, 2000);
             }
         }
@@ -981,23 +986,29 @@
 
         function startQuizGame() {
             gameState.round++;
-            showNextQuestion();
             
             // Show/hide next button based on host mode
             if (gameState.hostMode && gameState.isHost) {
                 document.getElementById('nextQuestionBtn').classList.remove('hidden');
-                
-                // Broadcast initial state to Firebase
-                if (isFirebaseReady && currentQuestion) {
-                    const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
-                    gameStateRef.set({
-                        currentGame: 'quiz',
-                        currentQuestion: currentQuestion,
-                        timestamp: Date.now()
-                    });
-                }
             } else {
                 document.getElementById('nextQuestionBtn').classList.add('hidden');
+            }
+            
+            showNextQuestion();
+            
+            // Broadcast initial state to Firebase immediately after question is set
+            if (gameState.hostMode && gameState.isHost && isFirebaseReady) {
+                setTimeout(() => {
+                    if (currentQuestion) {
+                        const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                        gameStateRef.set({
+                            currentGame: 'quiz',
+                            currentQuestion: currentQuestion,
+                            timestamp: Date.now()
+                        });
+                        console.log('Host broadcasting initial quiz question:', currentQuestion.question);
+                    }
+                }, 100);
             }
         }
 
@@ -1048,8 +1059,8 @@
             saveGameState();
             
             // In user-controlled mode, automatically show next question
-            // hostMode false or undefined means user-controlled
-            if (gameState.hostMode !== true) {
+            // In host mode, wait for host to click next button
+            if (!gameState.hostMode) {
                 setTimeout(showNextQuestion, 3000);
             }
         }
@@ -1058,15 +1069,18 @@
             if (!gameState.isHost) return;
             showNextQuestion();
             
-            // Broadcast to Firebase
-            if (isFirebaseReady && currentQuestion) {
-                const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
-                gameStateRef.update({
-                    currentGame: 'quiz',
-                    currentQuestion: currentQuestion,
-                    timestamp: Date.now()
-                });
-            }
+            // Broadcast to Firebase after question is set
+            setTimeout(() => {
+                if (isFirebaseReady && currentQuestion) {
+                    const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                    gameStateRef.update({
+                        currentGame: 'quiz',
+                        currentQuestion: currentQuestion,
+                        timestamp: Date.now()
+                    });
+                    console.log('Host broadcasting next question:', currentQuestion.question);
+                }
+            }, 100);
         }
 
         // Number Game
@@ -1088,6 +1102,17 @@
             // Show/hide next button based on host mode
             if (gameState.hostMode && gameState.isHost) {
                 document.getElementById('nextNumberBtn').classList.remove('hidden');
+                
+                // Broadcast target number to all players
+                if (isFirebaseReady) {
+                    const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                    gameStateRef.set({
+                        currentGame: 'number',
+                        targetNumber: targetNumber,
+                        timestamp: Date.now()
+                    });
+                    console.log('Host broadcasting number:', targetNumber);
+                }
             } else {
                 document.getElementById('nextNumberBtn').classList.add('hidden');
             }
@@ -1161,8 +1186,8 @@
             saveGameState();
             
             // In user-controlled mode, automatically start next round
-            // hostMode false or undefined means user-controlled
-            if (gameState.hostMode !== true) {
+            // In host mode, wait for host to click next button
+            if (!gameState.hostMode) {
                 setTimeout(startNumberGame, 4000);
             }
         }
@@ -1177,8 +1202,8 @@
             status.classList.remove('hidden');
             
             // In user-controlled mode, automatically start next round
-            // hostMode false or undefined means user-controlled
-            if (gameState.hostMode !== true) {
+            // In host mode, wait for host to click next button
+            if (!gameState.hostMode) {
                 setTimeout(startNumberGame, 4000);
             }
         }
@@ -1314,21 +1339,27 @@
         function syncWithHostGameState(hostGameState) {
             if (!hostGameState || gameState.isHost) return;
             
+            console.log('Syncing with host game state:', hostGameState);
+            
             // Sync color game
             if (hostGameState.currentGame === 'color' && hostGameState.currentColor) {
                 const display = document.getElementById('colorDisplay');
-                if (display && !display.classList.contains('hidden')) {
+                const colorGameDiv = document.getElementById('colorGame');
+                if (display && colorGameDiv && !colorGameDiv.classList.contains('hidden')) {
                     currentColor = hostGameState.currentColor;
                     display.textContent = currentColor.name;
                     display.style.background = currentColor.color;
                     colorGameActive = true;
+                    document.getElementById('colorStatus').textContent = '';
+                    console.log('Synced color:', currentColor.name);
                 }
             }
             
             // Sync quiz game
             if (hostGameState.currentGame === 'quiz' && hostGameState.currentQuestion) {
                 const questionBox = document.getElementById('questionBox');
-                if (questionBox && !questionBox.parentElement.classList.contains('hidden')) {
+                const quizGameDiv = document.getElementById('quizGame');
+                if (questionBox && quizGameDiv && !quizGameDiv.classList.contains('hidden')) {
                     currentQuestion = hostGameState.currentQuestion;
                     questionBox.textContent = currentQuestion.question;
                     
@@ -1345,6 +1376,7 @@
                     
                     quizAnswered = false;
                     document.getElementById('quizStatus').classList.add('hidden');
+                    console.log('Synced question:', currentQuestion.question);
                 }
             }
             
@@ -1353,6 +1385,7 @@
                 const numberGame = document.getElementById('numberGame');
                 if (numberGame && !numberGame.classList.contains('hidden')) {
                     targetNumber = hostGameState.targetNumber;
+                    console.log('Synced target number (hidden from player):', targetNumber);
                 }
             }
         }
