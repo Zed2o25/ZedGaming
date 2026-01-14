@@ -8,6 +8,11 @@
     <meta name="theme-color" content="#6366f1">
     <title>لعبة المجموعة - Group Game</title>
     <link rel="manifest" href="manifest.json">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -475,6 +480,7 @@
                     <span id="gameModeText">🎮 وضع عادي (يتحكم كل لاعب)</span>
                 </button>
             </div>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 20px;">🚪 مغادرة الغرفة</button>
         </div>
 
         <!-- Color Game -->
@@ -489,6 +495,7 @@
             <div class="status-message" id="colorStatus"></div>
             <button class="game-mode-btn submit-btn hidden" id="nextColorBtn" onclick="hostNextColor()">اللون التالي</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
 
         <!-- Quiz Game -->
@@ -498,6 +505,7 @@
             <div class="status-message hidden" id="quizStatus"></div>
             <button class="game-mode-btn submit-btn hidden" id="nextQuestionBtn" onclick="hostNextQuestion()">السؤال التالي</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
 
         <!-- Number Game -->
@@ -511,6 +519,7 @@
             <div class="status-message hidden" id="numberStatus"></div>
             <button class="game-mode-btn submit-btn hidden" id="nextNumberBtn" onclick="hostNextNumber()">الرقم التالي</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
 
         <!-- Scoreboard -->
@@ -526,6 +535,32 @@
     </div>
 
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxVZ8cP7qK9YwQxXqX5xHqF5xQxXqX5xQ",
+            authDomain: "zedgaming-demo.firebaseapp.com",
+            databaseURL: "https://zedgaming-demo-default-rtdb.firebaseio.com",
+            projectId: "zedgaming-demo",
+            storageBucket: "zedgaming-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        let database;
+        let isFirebaseReady = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            isFirebaseReady = true;
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            // Fall back to localStorage only mode
+            isFirebaseReady = false;
+        }
+
         // Game State
         let gameState = {
             roomCode: '',
@@ -567,6 +602,7 @@
             saveGameState();
             addRoomToList();
             startScoreboardAutoRefresh();
+            setupRoomListener();
         }
 
         function joinRoom() {
@@ -599,6 +635,7 @@
             updateGameModeDisplay();
             saveGameState();
             startScoreboardAutoRefresh();
+            setupRoomListener();
         }
 
         function showAvailableRooms() {
@@ -677,6 +714,7 @@
             updateGameModeDisplay();
             saveGameState();
             startScoreboardAutoRefresh();
+            setupRoomListener();
         }
 
         function getAllRooms() {
@@ -729,7 +767,13 @@
         }
 
         function updatePlayerCount() {
-            // Count active players in the room
+            // This will be updated by the Firebase listener in real-time
+            if (isFirebaseReady) {
+                // The listener handles this
+                return;
+            }
+            
+            // Count active players in the room (localStorage fallback)
             const allPlayers = loadRoomScores();
             document.getElementById('playerCount').textContent = 
                 `عدد اللاعبين: ${allPlayers.length}`;
@@ -751,6 +795,7 @@
                     updateScoreboard();
                     updateGameModeDisplay();
                     startScoreboardAutoRefresh();
+                    setupRoomListener();
                 }
             }
         }
@@ -800,6 +845,18 @@
             // Show/hide next button based on host mode
             if (gameState.hostMode && gameState.isHost) {
                 document.getElementById('nextColorBtn').classList.remove('hidden');
+                
+                // Broadcast initial state to Firebase after color is set
+                setTimeout(() => {
+                    if (isFirebaseReady && currentColor) {
+                        const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                        gameStateRef.set({
+                            currentGame: 'color',
+                            currentColor: currentColor,
+                            timestamp: Date.now()
+                        });
+                    }
+                }, 2100);
             } else {
                 document.getElementById('nextColorBtn').classList.add('hidden');
             }
@@ -851,6 +908,18 @@
         function hostNextColor() {
             if (!gameState.isHost) return;
             showNextColor();
+            
+            // Broadcast to Firebase after color is set
+            setTimeout(() => {
+                if (isFirebaseReady && currentColor) {
+                    const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                    gameStateRef.update({
+                        currentGame: 'color',
+                        currentColor: currentColor,
+                        timestamp: Date.now()
+                    });
+                }
+            }, 2100); // Wait for showNextColor's setTimeout to complete
         }
 
         // Quiz Game
@@ -917,6 +986,16 @@
             // Show/hide next button based on host mode
             if (gameState.hostMode && gameState.isHost) {
                 document.getElementById('nextQuestionBtn').classList.remove('hidden');
+                
+                // Broadcast initial state to Firebase
+                if (isFirebaseReady && currentQuestion) {
+                    const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                    gameStateRef.set({
+                        currentGame: 'quiz',
+                        currentQuestion: currentQuestion,
+                        timestamp: Date.now()
+                    });
+                }
             } else {
                 document.getElementById('nextQuestionBtn').classList.add('hidden');
             }
@@ -978,6 +1057,16 @@
         function hostNextQuestion() {
             if (!gameState.isHost) return;
             showNextQuestion();
+            
+            // Broadcast to Firebase
+            if (isFirebaseReady && currentQuestion) {
+                const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                gameStateRef.update({
+                    currentGame: 'quiz',
+                    currentQuestion: currentQuestion,
+                    timestamp: Date.now()
+                });
+            }
         }
 
         // Number Game
@@ -1097,6 +1186,16 @@
         function hostNextNumber() {
             if (!gameState.isHost) return;
             startNumberGame();
+            
+            // Broadcast to Firebase
+            if (isFirebaseReady && targetNumber) {
+                const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                gameStateRef.update({
+                    currentGame: 'number',
+                    targetNumber: targetNumber,
+                    timestamp: Date.now()
+                });
+            }
         }
 
         // Universal Scoreboard with Real-time Updates
@@ -1104,20 +1203,172 @@
             // Update my score in shared room data
             updateRoomScores();
             
-            // Load all players' scores from the room
-            const allPlayers = loadRoomScores();
+            if (!isFirebaseReady) {
+                // Load all players' scores from localStorage
+                const allPlayers = loadRoomScores();
+                updateScoreboardWithPlayers(allPlayers);
+            }
+            // If Firebase is ready, the real-time listener will handle updates
             
             // Update my score display
             document.getElementById('myScore').textContent = gameState.score;
             
-            console.log('Updating scoreboard - My score:', gameState.score, 'All players:', allPlayers);
+            console.log('Updating scoreboard - My score:', gameState.score);
+            
+            // Save the state after updating scoreboard
+            saveGameState();
+        }
+
+        function updateRoomScores() {
+            if (!gameState.roomCode) return;
+            
+            if (isFirebaseReady) {
+                // Use Firebase for real-time sync
+                const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
+                playerRef.set({
+                    name: gameState.playerName,
+                    score: gameState.score,
+                    timestamp: Date.now()
+                });
+            } else {
+                // Fallback to localStorage
+                const roomKey = `room_${gameState.roomCode}_scores`;
+                const roomData = localStorage.getItem(roomKey);
+                let players = roomData ? JSON.parse(roomData) : [];
+                
+                players = players.filter(p => p.name !== gameState.playerName);
+                players.push({
+                    name: gameState.playerName,
+                    score: gameState.score,
+                    timestamp: Date.now()
+                });
+                
+                const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                players = players.filter(p => p.timestamp > fiveMinutesAgo);
+                
+                localStorage.setItem(roomKey, JSON.stringify(players));
+            }
+        }
+
+        function loadRoomScores() {
+            if (!gameState.roomCode) {
+                return [{ name: gameState.playerName, score: gameState.score }];
+            }
+            
+            if (isFirebaseReady) {
+                // Firebase will handle this via real-time listener
+                // Return empty array as the listener will update the UI
+                return [];
+            } else {
+                // Fallback to localStorage
+                const roomKey = `room_${gameState.roomCode}_scores`;
+                const roomData = localStorage.getItem(roomKey);
+                
+                if (!roomData) {
+                    return [{ name: gameState.playerName, score: gameState.score }];
+                }
+                
+                const players = JSON.parse(roomData);
+                const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                return players.filter(p => p.timestamp > fiveMinutesAgo);
+            }
+        }
+
+        // Setup Firebase real-time listener for room
+        function setupRoomListener() {
+            if (!isFirebaseReady || !gameState.roomCode) return;
+            
+            const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
+            
+            roomRef.on('value', (snapshot) => {
+                const players = [];
+                snapshot.forEach((childSnapshot) => {
+                    const player = childSnapshot.val();
+                    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                    if (player.timestamp > fiveMinutesAgo) {
+                        players.push(player);
+                    }
+                });
+                
+                // Update scoreboard with all players
+                updateScoreboardWithPlayers(players);
+                
+                // Update player count
+                document.getElementById('playerCount').textContent = 
+                    `عدد اللاعبين: ${players.length}`;
+            });
+            
+            // Listen for host mode game state updates
+            if (!gameState.isHost) {
+                const gameStateRef = database.ref(`rooms/${gameState.roomCode}/gameState`);
+                gameStateRef.on('value', (snapshot) => {
+                    const hostGameState = snapshot.val();
+                    if (hostGameState) {
+                        syncWithHostGameState(hostGameState);
+                    }
+                });
+            }
+        }
+        
+        // Sync non-host players with host's game state
+        function syncWithHostGameState(hostGameState) {
+            if (!hostGameState || gameState.isHost) return;
+            
+            // Sync color game
+            if (hostGameState.currentGame === 'color' && hostGameState.currentColor) {
+                const display = document.getElementById('colorDisplay');
+                if (display && !display.classList.contains('hidden')) {
+                    currentColor = hostGameState.currentColor;
+                    display.textContent = currentColor.name;
+                    display.style.background = currentColor.color;
+                    colorGameActive = true;
+                }
+            }
+            
+            // Sync quiz game
+            if (hostGameState.currentGame === 'quiz' && hostGameState.currentQuestion) {
+                const questionBox = document.getElementById('questionBox');
+                if (questionBox && !questionBox.parentElement.classList.contains('hidden')) {
+                    currentQuestion = hostGameState.currentQuestion;
+                    questionBox.textContent = currentQuestion.question;
+                    
+                    const buttonsContainer = document.getElementById('answerButtons');
+                    buttonsContainer.innerHTML = '';
+                    
+                    currentQuestion.answers.forEach((answer, index) => {
+                        const btn = document.createElement('button');
+                        btn.className = 'answer-btn';
+                        btn.textContent = answer;
+                        btn.onclick = () => selectAnswer(index);
+                        buttonsContainer.appendChild(btn);
+                    });
+                    
+                    quizAnswered = false;
+                    document.getElementById('quizStatus').classList.add('hidden');
+                }
+            }
+            
+            // Sync number game
+            if (hostGameState.currentGame === 'number' && hostGameState.targetNumber) {
+                const numberGame = document.getElementById('numberGame');
+                if (numberGame && !numberGame.classList.contains('hidden')) {
+                    targetNumber = hostGameState.targetNumber;
+                }
+            }
+        }
+
+        function updateScoreboardWithPlayers(players) {
+            // Update my score display
+            document.getElementById('myScore').textContent = gameState.score;
+            
+            console.log('Updating scoreboard with players:', players);
             
             // Update full scoreboard with all players
             const scoreList = document.getElementById('scoreList');
             scoreList.innerHTML = '';
             
             // Sort players by score
-            const sortedPlayers = [...allPlayers].sort((a, b) => b.score - a.score);
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
             
             sortedPlayers.forEach((player, index) => {
                 const li = document.createElement('li');
@@ -1133,52 +1384,6 @@
                 `;
                 scoreList.appendChild(li);
             });
-            
-            // Save the state after updating scoreboard
-            saveGameState();
-        }
-
-        function updateRoomScores() {
-            if (!gameState.roomCode) return;
-            
-            const roomKey = `room_${gameState.roomCode}_scores`;
-            const roomData = localStorage.getItem(roomKey);
-            let players = roomData ? JSON.parse(roomData) : [];
-            
-            // Remove or update existing player entry
-            players = players.filter(p => p.name !== gameState.playerName);
-            
-            // Add current player with updated score
-            players.push({
-                name: gameState.playerName,
-                score: gameState.score,
-                timestamp: Date.now()
-            });
-            
-            // Clean up old players (inactive for more than 5 minutes)
-            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-            players = players.filter(p => p.timestamp > fiveMinutesAgo);
-            
-            localStorage.setItem(roomKey, JSON.stringify(players));
-        }
-
-        function loadRoomScores() {
-            if (!gameState.roomCode) {
-                return [{ name: gameState.playerName, score: gameState.score }];
-            }
-            
-            const roomKey = `room_${gameState.roomCode}_scores`;
-            const roomData = localStorage.getItem(roomKey);
-            
-            if (!roomData) {
-                return [{ name: gameState.playerName, score: gameState.score }];
-            }
-            
-            const players = JSON.parse(roomData);
-            
-            // Clean up old players
-            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-            return players.filter(p => p.timestamp > fiveMinutesAgo);
         }
 
         // Auto-refresh scoreboard every 2 seconds to show live updates
@@ -1208,6 +1413,51 @@
             }
         }
 
+        // Leave room and go back to main screen
+        function leaveRoom() {
+            if (confirm('هل تريد مغادرة الغرفة؟')) {
+                // Remove player from Firebase
+                if (isFirebaseReady && gameState.roomCode) {
+                    const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
+                    playerRef.remove();
+                    
+                    // Stop listening to room updates
+                    const roomRef = database.ref(`rooms/${gameState.roomCode}`);
+                    roomRef.off();
+                }
+                
+                // Stop auto-refresh
+                stopScoreboardAutoRefresh();
+                
+                // Clear timers
+                if (numberTimer) {
+                    clearInterval(numberTimer);
+                    numberTimer = null;
+                }
+                
+                // Clear game state
+                gameState = {
+                    roomCode: '',
+                    playerName: '',
+                    players: [],
+                    currentGame: null,
+                    score: 0,
+                    round: 0,
+                    isHost: false,
+                    hostMode: false
+                };
+                
+                // Clear localStorage
+                localStorage.removeItem('gameState');
+                
+                // Hide all screens and show join screen
+                document.querySelectorAll('.game-area').forEach(el => el.classList.add('hidden'));
+                document.getElementById('joinScreen').classList.remove('hidden');
+                document.getElementById('roomCode').textContent = '----';
+                document.getElementById('playerCount').textContent = 'عدد اللاعبين: 1';
+            }
+        }
+        
         // Clear all data and restart
         function clearAllData() {
             if (confirm('هل تريد مسح كل البيانات المحفوظة والبدء من جديد؟')) {
