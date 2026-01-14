@@ -564,6 +564,12 @@
                     isFirebaseReady = true;
                     console.log('%c✅ Firebase connected successfully!', 'color: #22c55e; font-weight: bold;');
                     updateConnectionStatus(true);
+                    
+                    // If we already have a room code, set up the listener now
+                    if (gameState.roomCode) {
+                        console.log('Firebase ready - setting up room listener for:', gameState.roomCode);
+                        setupRoomListener();
+                    }
                 } else {
                     isFirebaseReady = false;
                     console.log('%c❌ Firebase disconnected', 'color: #ef4444; font-weight: bold;');
@@ -702,7 +708,52 @@
         }
 
         function loadRoomsList() {
-            const rooms = getAllRooms();
+            const roomsList = document.getElementById('roomsList');
+            roomsList.innerHTML = '<p style="text-align: center; color: #64748b; padding: 20px;">جاري تحميل الغرف...</p>';
+            
+            if (isFirebaseReady) {
+                // Load rooms from Firebase
+                console.log('Loading rooms from Firebase...');
+                const roomsRef = database.ref('rooms');
+                
+                roomsRef.once('value', (snapshot) => {
+                    const firebaseRooms = [];
+                    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+                    
+                    snapshot.forEach((childSnapshot) => {
+                        const roomCode = childSnapshot.key;
+                        const roomData = childSnapshot.val();
+                        
+                        if (roomData.players) {
+                            const players = Object.values(roomData.players);
+                            const recentPlayers = players.filter(p => p.timestamp > oneHourAgo);
+                            
+                            if (recentPlayers.length > 0) {
+                                // Find host (first player chronologically)
+                                const sortedPlayers = recentPlayers.sort((a, b) => a.timestamp - b.timestamp);
+                                
+                                firebaseRooms.push({
+                                    code: roomCode,
+                                    hostName: sortedPlayers[0].name,
+                                    players: recentPlayers.length,
+                                    hostMode: roomData.hostMode || false,
+                                    timestamp: sortedPlayers[0].timestamp
+                                });
+                            }
+                        }
+                    });
+                    
+                    console.log('Found rooms in Firebase:', firebaseRooms);
+                    displayRoomsList(firebaseRooms);
+                });
+            } else {
+                // Fallback to localStorage
+                const rooms = getAllRooms();
+                displayRoomsList(rooms);
+            }
+        }
+        
+        function displayRoomsList(rooms) {
             const roomsList = document.getElementById('roomsList');
             
             if (rooms.length === 0) {
@@ -711,6 +762,9 @@
             }
             
             roomsList.innerHTML = '';
+            
+            // Sort by most recent
+            rooms.sort((a, b) => b.timestamp - a.timestamp);
             
             rooms.forEach(room => {
                 const card = document.createElement('div');
@@ -740,15 +794,12 @@
                 return;
             }
             
-            const rooms = getAllRooms();
-            const room = rooms.find(r => r.code === code);
-            
             gameState.playerName = name;
             gameState.roomCode = code;
             gameState.players = [{ name: name, score: 0, id: 'me' }];
             gameState.score = 0;
             gameState.isHost = false;
-            gameState.hostMode = room.hostMode || false;
+            gameState.hostMode = false; // Will sync from Firebase
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('roomBrowserScreen').classList.add('hidden');
@@ -774,6 +825,18 @@
         }
 
         function addRoomToList() {
+            // Save to Firebase if connected
+            if (isFirebaseReady && gameState.roomCode) {
+                const roomMetaRef = database.ref(`rooms/${gameState.roomCode}/metadata`);
+                roomMetaRef.set({
+                    hostName: gameState.playerName,
+                    hostMode: gameState.hostMode,
+                    timestamp: Date.now()
+                });
+                console.log('Room metadata saved to Firebase:', gameState.roomCode);
+            }
+            
+            // Also save to localStorage for backward compatibility
             const rooms = getAllRooms();
             
             // Remove existing room with same code
@@ -1365,7 +1428,12 @@
 
         // Setup Firebase real-time listener for room
         function setupRoomListener() {
-            if (!isFirebaseReady || !gameState.roomCode) return;
+            if (!isFirebaseReady || !gameState.roomCode) {
+                console.log('Cannot setup room listener - Firebase ready:', isFirebaseReady, 'Room code:', gameState.roomCode);
+                return;
+            }
+            
+            console.log('Setting up Firebase listener for room:', gameState.roomCode);
             
             const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
             
