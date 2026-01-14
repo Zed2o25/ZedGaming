@@ -1551,10 +1551,29 @@
             }
         }
 
+        // Listen for localStorage changes from other tabs/windows
+        window.addEventListener('storage', (e) => {
+            // Check if the change is related to room scores
+            if (e.key && e.key.startsWith('room_') && e.key.endsWith('_scores')) {
+                console.log('📡 Detected score update from another tab:', e.key);
+                
+                // Check if it's our current room
+                const roomKey = `room_${gameState.roomCode}_scores`;
+                if (e.key === roomKey && gameState.roomCode) {
+                    // Reload and update scoreboard
+                    const allPlayers = loadRoomScores();
+                    console.log('🔄 Syncing scoreboard with other tabs. Players:', allPlayers);
+                    updateScoreboardWithPlayers(allPlayers);
+                    updatePlayerCount();
+                }
+            }
+        });
+
         // Initialize
         window.addEventListener('load', () => {
             console.log('%c🎮 ZedGaming Multiplayer Game', 'color: #6366f1; font-size: 20px; font-weight: bold;');
             console.log('%c🔍 Open Console (F12) to see debug info', 'color: #3b82f6; font-weight: bold;');
+            console.log('%c💡 Tip: Open multiple tabs with the same room code to test multiplayer!', 'color: #22c55e;');
             loadGameState();
         });
 
