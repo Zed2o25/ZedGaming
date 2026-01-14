@@ -641,6 +641,7 @@
             document.getElementById('gameModeScreen').classList.remove('hidden');
             
             updatePlayerCount();
+            updateRoomScores(); // Save player to room immediately
             updateScoreboard();
             saveGameState();
             addRoomToList();
@@ -674,6 +675,7 @@
             document.getElementById('gameModeScreen').classList.remove('hidden');
             
             updatePlayerCount();
+            updateRoomScores(); // Save player to room immediately
             updateScoreboard();
             updateGameModeDisplay();
             saveGameState();
@@ -753,6 +755,7 @@
             document.getElementById('gameModeScreen').classList.remove('hidden');
             
             updatePlayerCount();
+            updateRoomScores(); // Save player to room immediately
             updateScoreboard();
             updateGameModeDisplay();
             saveGameState();
@@ -1597,13 +1600,6 @@
             console.log('%c🔍 Open Console (F12) to see debug info', 'color: #3b82f6; font-weight: bold;');
             console.log('%c💡 Tip: Open multiple tabs with the same room code to test multiplayer!', 'color: #22c55e;');
             loadGameState();
-        });
-
-        // Install prompt for PWA
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
         });
     </script>
 </body>
