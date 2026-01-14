@@ -578,12 +578,8 @@
                 return;
             }
             
-            // Check if room exists
-            const rooms = getAllRooms();
-            const room = rooms.find(r => r.code === code);
-            
-            if (!room) {
-                alert('الغرفة غير موجودة');
+            if (code.length !== 4) {
+                alert('كود الغرفة يجب أن يكون 4 أحرف');
                 return;
             }
             
@@ -592,7 +588,7 @@
             gameState.players = [{ name: name, score: 0, id: 'me' }];
             gameState.score = 0;
             gameState.isHost = false;
-            gameState.hostMode = room.hostMode || false;
+            gameState.hostMode = false; // Default to user-controlled mode
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('joinScreen').classList.add('hidden');
