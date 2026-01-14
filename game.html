@@ -1268,14 +1268,22 @@
 
         // Universal Scoreboard with Real-time Updates
         function updateScoreboard() {
+            // Check if we're on a screen with scoreboard
+            const myScoreEl = document.getElementById('myScore');
+            if (!myScoreEl) {
+                console.log('Skipping scoreboard update - not on game screen yet');
+                return;
+            }
+            
             // Update my score in shared room data
             updateRoomScores();
             
             // Update my score display
-            document.getElementById('myScore').textContent = gameState.score;
+            myScoreEl.textContent = gameState.score;
             
             if (!isFirebaseReady) {
-                // Load all players' scores from localStorage and update UI
+                // IMPORTANT: Load fresh data from localStorage AFTER updating
+                // This ensures we see all players, not just ourselves
                 const allPlayers = loadRoomScores();
                 console.log('Updating scoreboard (localStorage) - Players:', allPlayers);
                 updateScoreboardWithPlayers(allPlayers);
@@ -1307,6 +1315,9 @@
                 const roomData = localStorage.getItem(roomKey);
                 let players = roomData ? JSON.parse(roomData) : [];
                 
+                console.log(`📝 Before update - Players in room ${gameState.roomCode}:`, players.map(p => p.name));
+                
+                // Remove current player if they exist, then add them back with updated score
                 players = players.filter(p => p.name !== gameState.playerName);
                 players.push({
                     name: gameState.playerName,
@@ -1314,11 +1325,14 @@
                     timestamp: Date.now()
                 });
                 
+                // Filter out old players (inactive for 5+ minutes)
                 const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
                 players = players.filter(p => p.timestamp > fiveMinutesAgo);
                 
+                console.log(`💾 After update - Players in room ${gameState.roomCode}:`, players.map(p => `${p.name}(${p.score})`));
+                
                 localStorage.setItem(roomKey, JSON.stringify(players));
-                console.log(`localStorage: Updated ${gameState.playerName} score to ${gameState.score}. Total players in room: ${players.length}`);
+                console.log(`✅ Saved to localStorage. Total players: ${players.length}`);
             }
         }
 
