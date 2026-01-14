@@ -433,6 +433,7 @@
                 <span id="roomCode">----</span>
             </div>
             <div class="player-count" id="playerCount">عدد اللاعبين: 1</div>
+            <div id="connectionStatus" style="font-size: 12px; margin-top: 5px; color: #ef4444;">🔴 لم يتم الاتصال بالخادم</div>
         </div>
 
         <!-- Join Room Screen -->
@@ -555,12 +556,52 @@
         try {
             firebase.initializeApp(firebaseConfig);
             database = firebase.database();
-            isFirebaseReady = true;
-            console.log('Firebase initialized successfully');
+            
+            // Test Firebase connection
+            const connectedRef = database.ref('.info/connected');
+            connectedRef.on('value', (snapshot) => {
+                if (snapshot.val() === true) {
+                    isFirebaseReady = true;
+                    console.log('%c✅ Firebase connected successfully!', 'color: #22c55e; font-weight: bold;');
+                    updateConnectionStatus(true);
+                } else {
+                    isFirebaseReady = false;
+                    console.log('%c❌ Firebase disconnected', 'color: #ef4444; font-weight: bold;');
+                    updateConnectionStatus(false);
+                }
+            });
+            
+            // Test if database URL is valid
+            setTimeout(() => {
+                if (!isFirebaseReady) {
+                    console.error('%c⚠️ Firebase not connecting - using localStorage only mode', 'color: #f59e0b; font-weight: bold;');
+                    console.log('%cTo enable real multiplayer:', 'color: #3b82f6; font-weight: bold;');
+                    console.log('1. Go to https://console.firebase.google.com');
+                    console.log('2. Create a new project');
+                    console.log('3. Enable Realtime Database');
+                    console.log('4. Copy your config and replace the firebaseConfig in the code');
+                    updateConnectionStatus(false);
+                }
+            }, 3000);
+            
         } catch (error) {
-            console.error('Firebase initialization error:', error);
-            // Fall back to localStorage only mode
+            console.error('%c❌ Firebase initialization error:', 'color: #ef4444; font-weight: bold;', error);
+            console.log('%cFalling back to localStorage only mode', 'color: #f59e0b; font-weight: bold;');
             isFirebaseReady = false;
+            updateConnectionStatus(false);
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (statusEl) {
+                if (connected) {
+                    statusEl.innerHTML = '🟢 متصل بالخادم - متعدد اللاعبين مفعّل';
+                    statusEl.style.color = '#22c55e';
+                } else {
+                    statusEl.innerHTML = '🔴 وضع محلي فقط - اربط Firebase للتعدد';
+                    statusEl.style.color = '#ef4444';
+                }
+            }
         }
 
         // Game State
@@ -769,16 +810,18 @@
         }
 
         function updatePlayerCount() {
-            // This will be updated by the Firebase listener in real-time
             if (isFirebaseReady) {
-                // The listener handles this
+                // Firebase listener will handle this
                 return;
             }
             
             // Count active players in the room (localStorage fallback)
             const allPlayers = loadRoomScores();
+            const count = allPlayers.length;
             document.getElementById('playerCount').textContent = 
-                `عدد اللاعبين: ${allPlayers.length}`;
+                `عدد اللاعبين: ${count}`;
+            
+            console.log(`Player count updated: ${count} players in room ${gameState.roomCode}`);
         }
 
         function saveGameState() {
@@ -1228,17 +1271,19 @@
             // Update my score in shared room data
             updateRoomScores();
             
-            if (!isFirebaseReady) {
-                // Load all players' scores from localStorage
-                const allPlayers = loadRoomScores();
-                updateScoreboardWithPlayers(allPlayers);
-            }
-            // If Firebase is ready, the real-time listener will handle updates
-            
             // Update my score display
             document.getElementById('myScore').textContent = gameState.score;
             
-            console.log('Updating scoreboard - My score:', gameState.score);
+            if (!isFirebaseReady) {
+                // Load all players' scores from localStorage and update UI
+                const allPlayers = loadRoomScores();
+                console.log('Updating scoreboard (localStorage) - Players:', allPlayers);
+                updateScoreboardWithPlayers(allPlayers);
+                updatePlayerCount();
+            }
+            // If Firebase is ready, the real-time listener will handle updates
+            
+            console.log('Scoreboard updated - My score:', gameState.score);
             
             // Save the state after updating scoreboard
             saveGameState();
@@ -1255,6 +1300,7 @@
                     score: gameState.score,
                     timestamp: Date.now()
                 });
+                console.log(`Firebase: Updated ${gameState.playerName} score to ${gameState.score}`);
             } else {
                 // Fallback to localStorage
                 const roomKey = `room_${gameState.roomCode}_scores`;
@@ -1272,6 +1318,7 @@
                 players = players.filter(p => p.timestamp > fiveMinutesAgo);
                 
                 localStorage.setItem(roomKey, JSON.stringify(players));
+                console.log(`localStorage: Updated ${gameState.playerName} score to ${gameState.score}. Total players in room: ${players.length}`);
             }
         }
 
@@ -1433,7 +1480,12 @@
                     const joinScreen = document.getElementById('joinScreen');
                     const isOnJoinScreen = !joinScreen.classList.contains('hidden');
                     if (!isOnJoinScreen) {
-                        updateScoreboard();
+                        if (!isFirebaseReady) {
+                            // In localStorage mode, manually refresh to pick up changes from other tabs
+                            const allPlayers = loadRoomScores();
+                            updateScoreboardWithPlayers(allPlayers);
+                            updatePlayerCount();
+                        }
                     }
                 }
             }, 2000);
@@ -1501,6 +1553,8 @@
 
         // Initialize
         window.addEventListener('load', () => {
+            console.log('%c🎮 ZedGaming Multiplayer Game', 'color: #6366f1; font-size: 20px; font-weight: bold;');
+            console.log('%c🔍 Open Console (F12) to see debug info', 'color: #3b82f6; font-weight: bold;');
             loadGameState();
         });
 
