@@ -475,6 +475,22 @@
             </div>
         </div>
 
+        <!-- Role Selection Screen -->
+        <div class="game-area hidden" id="roleSelectionScreen">
+            <h2 style="text-align: center; color: #6366f1; margin-bottom: 20px;">🎭 اختر دورك | Choose Your Role</h2>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <p style="color: #64748b; margin-bottom: 10px;">🎮 <strong>لاعب</strong>: شارك في الألعاب واكسب النقاط</p>
+                <p style="color: #64748b;">👁️ <strong>مراقب</strong>: شاهد فقط بدون مشاركة</p>
+            </div>
+            <button class="submit-btn" onclick="selectRole('player')" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 15px;">
+                🎮 انضم كلاعب | Join as Player
+            </button>
+            <button class="submit-btn" onclick="selectRole('observer')" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                👁️ شاهد كمراقب | Watch as Observer
+            </button>
+            <button class="game-mode-btn back-btn" onclick="backFromRoleSelection()" style="margin-top: 20px;">← عودة</button>
+        </div>
+
         <!-- How to Play Screen -->
         <div class="game-area hidden" id="howToPlayScreen">
             <h2 style="text-align: center; color: #6366f1; margin-bottom: 20px;">📖 كيفية اللعب | How to Play</h2>
@@ -1040,13 +1056,6 @@
             }, 500);
             
             console.log(`🎭 User selected role: ${role}`);
-        }
-        
-        function backFromRoleSelection() {
-            document.getElementById('roleSelectionScreen').classList.add('hidden');
-            document.getElementById('joinScreen').classList.remove('hidden');
-            gameState.currentScreen = 'joinScreen';
-            saveGameState();
         }
         
         function backFromRoleSelection() {
