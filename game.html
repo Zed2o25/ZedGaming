@@ -987,11 +987,11 @@
             gameState.score = 0;
             gameState.isHost = false;
             gameState.hostMode = false; // Default to user-controlled mode
-            gameState.currentScreen = 'gameModeScreen';
+            gameState.currentScreen = 'roleSelectionScreen';
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('joinScreen').classList.add('hidden');
-            document.getElementById('gameModeScreen').classList.remove('hidden');
+            document.getElementById('roleSelectionScreen').classList.remove('hidden');
             
             updatePlayerCount();
             updateRoomScores(); // Save player to room immediately
@@ -1012,6 +1012,43 @@
             }, 500);
         }
 
+        function selectRole(role) {
+            gameState.role = role;
+            
+            // Navigate to game mode screen
+            document.getElementById('roleSelectionScreen').classList.add('hidden');
+            document.getElementById('gameModeScreen').classList.remove('hidden');
+            gameState.currentScreen = 'gameModeScreen';
+            
+            // Now update Firebase with role
+            updatePlayerCount();
+            updateRoomScores(); // Save player with role to room
+            updateScoreboard();
+            updateGameModeDisplay();
+            saveGameState();
+            startScoreboardAutoRefresh();
+            setupRoomListener();
+            
+            // Force initial scoreboard update
+            setTimeout(() => {
+                if (!isFirebaseReady) {
+                    const allPlayers = loadRoomScores();
+                    if (allPlayers.length > 0) {
+                        updateScoreboardWithPlayers(allPlayers);
+                    }
+                }
+            }, 500);
+            
+            console.log(`🎭 User selected role: ${role}`);
+        }
+        
+        function backFromRoleSelection() {
+            document.getElementById('roleSelectionScreen').classList.add('hidden');
+            document.getElementById('joinScreen').classList.remove('hidden');
+            gameState.currentScreen = 'joinScreen';
+            saveGameState();
+        }
+        
         function showAvailableRooms() {
             const name = document.getElementById('playerName').value.trim();
             document.getElementById('browserPlayerName').value = name;
@@ -3041,6 +3078,7 @@
                 playerRef.set({
                     name: gameState.playerName,
                     score: gameState.score,
+                    role: gameState.role || 'player',
                     isModerator: false,
                     timestamp: Date.now()
                 });
@@ -3236,23 +3274,49 @@
                 return;
             }
             
-            // Sort players by score
-            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            // Separate players and observers
+            const realPlayers = players.filter(p => !p.role || p.role === 'player');
+            const observers = players.filter(p => p.role === 'observer');
             
+            // Sort players by score
+            const sortedPlayers = [...realPlayers].sort((a, b) => b.score - a.score);
+            
+            // Display players
             sortedPlayers.forEach((player, index) => {
                 const li = document.createElement('li');
                 li.className = 'score-item' + (index === 0 ? ' first' : '');
                 
-                // Highlight current player
                 const isMe = player.name === gameState.playerName;
                 const nameStyle = isMe ? 'font-weight: bold; text-decoration: underline;' : '';
                 
                 li.innerHTML = `
-                    <span class="player-name" style="${nameStyle}">${index === 0 ? '👑 ' : ''}${player.name}${isMe ? ' (أنت)' : ''}</span>
+                    <span class="player-name" style="${nameStyle}">🎮 ${index === 0 ? '👑 ' : ''}${player.name}${isMe ? ' (أنت)' : ''}</span>
                     <span class="player-score">${player.score}</span>
                 `;
                 scoreList.appendChild(li);
             });
+            
+            // Display observers if any
+            if (observers.length > 0) {
+                const divider = document.createElement('li');
+                divider.style.cssText = 'border-top: 2px solid #e2e8f0; margin: 10px 0; padding-top: 10px; list-style: none;';
+                divider.innerHTML = '<span style="color: #64748b; font-size: 14px; font-weight: 600;">👁️ المراقبون | Observers</span>';
+                scoreList.appendChild(divider);
+                
+                observers.forEach((observer) => {
+                    const li = document.createElement('li');
+                    li.className = 'score-item';
+                    
+                    const isMe = observer.name === gameState.playerName;
+                    const nameStyle = isMe ? 'font-weight: bold; text-decoration: underline;' : '';
+                    
+                    li.innerHTML = `
+                        <span class="player-name" style="${nameStyle}; color: #64748b;">👁️ ${observer.name}${isMe ? ' (أنت)' : ''}</span>
+                        <span class="player-score" style="color: #94a3b8;">-</span>
+                    `;
+                    scoreList.appendChild(li);
+                });
+            }
             
             console.log('📊 Scoreboard updated with', sortedPlayers.length, 'players');
         }
