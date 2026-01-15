@@ -476,6 +476,21 @@
                 <button class="game-mode-btn number-game-btn" onclick="startGame('number')">
                     🔢 خمن الرقم
                 </button>
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);" onclick="startGame('reaction')">
+                    ⚡ لعبة سرعة البديهة
+                </button>
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);" onclick="startGame('trueFalse')">
+                    ✅ صح أم خطأ
+                </button>
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ee5a6f 0%, #f29263 100%);" onclick="startGame('wordChain')">
+                    🔤 سلسلة الكلمات
+                </button>
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="startGame('drawing')">
+                    🎨 لعبة الرسم
+                </button>
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);" onclick="startGame('memory')">
+                    🧩 تطابق الذاكرة
+                </button>
             </div>
             <div style="text-align: center; margin: 20px 0; color: #64748b;">وضع اللعب</div>
             <div class="game-mode-select">
@@ -527,6 +542,82 @@
             </div>
             <div class="status-message hidden" id="numberStatus"></div>
             <button class="game-mode-btn submit-btn hidden" id="nextNumberBtn" onclick="hostNextNumber()">الرقم التالي</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- Reaction Speed Game -->
+        <div class="game-area hidden" id="reactionGame">
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">⚡ اضغط بأسرع ما يمكن عندما يتحول للأخضر!</h3>
+            <div style="width: 100%; height: 200px; border-radius: 15px; margin: 20px 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; color: white; transition: all 0.3s; cursor: pointer;" id="reactionBox" onclick="clickReaction()">
+                انتظر...
+            </div>
+            <div class="timer" id="reactionTimer" style="font-size: 32px;">---</div>
+            <div class="status-message hidden" id="reactionStatus"></div>
+            <button class="game-mode-btn submit-btn hidden" id="nextReactionBtn" onclick="hostNextReaction()">جولة جديدة</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- True/False Game -->
+        <div class="game-area hidden" id="trueFalseGame">
+            <div class="question-box" id="trueFalseQuestion">جاري تحميل السؤال...</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                <button class="answer-btn" style="background: #22c55e; color: white; padding: 30px; font-size: 20px;" onclick="selectTrueFalse(true)">✅ صح</button>
+                <button class="answer-btn" style="background: #ef4444; color: white; padding: 30px; font-size: 20px;" onclick="selectTrueFalse(false)">❌ خطأ</button>
+            </div>
+            <div class="status-message hidden" id="trueFalseStatus"></div>
+            <button class="game-mode-btn submit-btn hidden" id="nextTrueFalseBtn" onclick="hostNextTrueFalse()">السؤال التالي</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- Word Chain Game -->
+        <div class="game-area hidden" id="wordChainGame">
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">🔤 أكمل سلسلة الكلمات</h3>
+            <div class="question-box" id="wordChainPrompt">جاري التحميل...</div>
+            <input type="text" class="name-input" id="wordChainInput" placeholder="اكتب كلمة..." style="font-size: 24px; margin: 20px 0;">
+            <button class="submit-btn" onclick="submitWord()">إرسال الكلمة</button>
+            <div class="status-message hidden" id="wordChainStatus"></div>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin: 15px 0; max-height: 200px; overflow-y: auto;" id="wordChainHistory">
+                <h4 style="color: #6366f1; margin-bottom: 10px;">الكلمات السابقة:</h4>
+                <div id="wordList" style="color: #64748b;">لا توجد كلمات بعد...</div>
+            </div>
+            <button class="game-mode-btn submit-btn hidden" id="nextWordChainBtn" onclick="hostNextWordChain()">موضوع جديد</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- Drawing Game -->
+        <div class="game-area hidden" id="drawingGame">
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">🎨 ارسم الكلمة!</h3>
+            <div class="status-message" id="drawingWord" style="font-size: 24px; font-weight: bold;">...</div>
+            <canvas id="drawingCanvas" style="width: 100%; height: 300px; background: white; border-radius: 15px; border: 3px solid #6366f1; cursor: crosshair; touch-action: none;"></canvas>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0;">
+                <button class="answer-btn" style="background: #000; padding: 15px;" onclick="setDrawColor('#000')">⚫</button>
+                <button class="answer-btn" style="background: #ef4444; padding: 15px;" onclick="setDrawColor('#ef4444')">🔴</button>
+                <button class="answer-btn" style="background: #3b82f6; padding: 15px;" onclick="setDrawColor('#3b82f6')">🔵</button>
+                <button class="answer-btn" style="background: #22c55e; padding: 15px;" onclick="setDrawColor('#22c55e')">🟢</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+                <button class="submit-btn" onclick="clearCanvas()" style="background: #f59e0b;">🗑️ مسح</button>
+                <button class="submit-btn" onclick="finishDrawing()" style="background: #22c55e;">✅ انتهيت</button>
+            </div>
+            <div class="status-message hidden" id="drawingStatus"></div>
+            <button class="game-mode-btn submit-btn hidden" id="nextDrawingBtn" onclick="hostNextDrawing()">رسمة جديدة</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- Memory Match Game -->
+        <div class="game-area hidden" id="memoryGame">
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">🧩 ابحث عن الأزواج المتطابقة</h3>
+            <div class="timer" id="memoryTimer" style="font-size: 28px;">00:00</div>
+            <div id="memoryGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;">
+                <!-- Cards will be generated here -->
+            </div>
+            <div class="status-message" id="memoryStatus">أزواج متطابقة: <span id="matchCount">0</span> / 8</div>
+            <button class="game-mode-btn submit-btn hidden" id="nextMemoryBtn" onclick="hostNextMemory()">لعبة جديدة</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
@@ -990,7 +1081,12 @@
                         const gameScreenMap = {
                             'color': 'colorGame',
                             'quiz': 'quizGame',
-                            'number': 'numberGame'
+                            'number': 'numberGame',
+                            'reaction': 'reactionGame',
+                            'trueFalse': 'trueFalseGame',
+                            'wordChain': 'wordChainGame',
+                            'drawing': 'drawingGame',
+                            'memory': 'memoryGame'
                         };
                         const gameScreen = gameScreenMap[gameState.currentGame];
                         if (gameScreen) {
@@ -1003,6 +1099,16 @@
                                 startQuizGame();
                             } else if (gameState.currentGame === 'number') {
                                 startNumberGame();
+                            } else if (gameState.currentGame === 'reaction') {
+                                startReactionGame();
+                            } else if (gameState.currentGame === 'trueFalse') {
+                                startTrueFalseGame();
+                            } else if (gameState.currentGame === 'wordChain') {
+                                startWordChainGame();
+                            } else if (gameState.currentGame === 'drawing') {
+                                startDrawingGame();
+                            } else if (gameState.currentGame === 'memory') {
+                                startMemoryGame();
                             }
                         }
                     }
@@ -1049,6 +1155,26 @@
                 gameState.currentScreen = 'numberGame';
                 document.getElementById('numberGame').classList.remove('hidden');
                 startNumberGame();
+            } else if (type === 'reaction') {
+                gameState.currentScreen = 'reactionGame';
+                document.getElementById('reactionGame').classList.remove('hidden');
+                startReactionGame();
+            } else if (type === 'trueFalse') {
+                gameState.currentScreen = 'trueFalseGame';
+                document.getElementById('trueFalseGame').classList.remove('hidden');
+                startTrueFalseGame();
+            } else if (type === 'wordChain') {
+                gameState.currentScreen = 'wordChainGame';
+                document.getElementById('wordChainGame').classList.remove('hidden');
+                startWordChainGame();
+            } else if (type === 'drawing') {
+                gameState.currentScreen = 'drawingGame';
+                document.getElementById('drawingGame').classList.remove('hidden');
+                startDrawingGame();
+            } else if (type === 'memory') {
+                gameState.currentScreen = 'memoryGame';
+                document.getElementById('memoryGame').classList.remove('hidden');
+                startMemoryGame();
             }
             
             saveGameState();
@@ -1464,6 +1590,546 @@
             }
         }
 
+        // Reaction Speed Game
+        let reactionStartTime = 0;
+        let reactionWaiting = false;
+        let reactionTimeout = null;
+
+        function startReactionGame() {
+            gameState.round++;
+            
+            // Show/hide next button based on host mode
+            if (gameState.hostMode && gameState.isHost) {
+                document.getElementById('nextReactionBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextReactionBtn').classList.add('hidden');
+            }
+            
+            startReactionRound();
+        }
+
+        function startReactionRound() {
+            const box = document.getElementById('reactionBox');
+            const timer = document.getElementById('reactionTimer');
+            const status = document.getElementById('reactionStatus');
+            
+            box.style.background = '#ef4444';
+            box.textContent = 'انتظر...';
+            timer.textContent = '---';
+            status.classList.add('hidden');
+            reactionWaiting = true;
+            
+            // Random delay between 2-5 seconds
+            const delay = 2000 + Math.random() * 3000;
+            
+            if (reactionTimeout) clearTimeout(reactionTimeout);
+            
+            reactionTimeout = setTimeout(() => {
+                box.style.background = '#22c55e';
+                box.textContent = '⚡ اضغط الآن!';
+                reactionStartTime = Date.now();
+                reactionWaiting = false;
+            }, delay);
+        }
+
+        function clickReaction() {
+            const box = document.getElementById('reactionBox');
+            const timer = document.getElementById('reactionTimer');
+            const status = document.getElementById('reactionStatus');
+            
+            if (reactionWaiting) {
+                // Clicked too early!
+                box.style.background = '#fbbf24';
+                box.textContent = '😅 مبكر جداً!';
+                status.textContent = '❌ انتظر حتى يتحول للأخضر!';
+                status.style.background = '#fee2e2';
+                status.style.color = '#991b1b';
+                status.classList.remove('hidden');
+                
+                if (reactionTimeout) clearTimeout(reactionTimeout);
+                
+                if (!gameState.hostMode) {
+                    setTimeout(startReactionRound, 2000);
+                }
+                return;
+            }
+            
+            if (reactionStartTime === 0) return; // Not started yet
+            
+            const reactionTime = Date.now() - reactionStartTime;
+            timer.textContent = reactionTime + ' ms';
+            
+            let points = 0;
+            let message = '';
+            
+            if (reactionTime < 200) {
+                points = 50;
+                message = '🚀 خارق! +50 نقطة';
+            } else if (reactionTime < 300) {
+                points = 40;
+                message = '⚡ سريع جداً! +40 نقطة';
+            } else if (reactionTime < 400) {
+                points = 30;
+                message = '🔥 ممتاز! +30 نقطة';
+            } else if (reactionTime < 500) {
+                points = 20;
+                message = '👍 جيد! +20 نقطة';
+            } else {
+                points = 10;
+                message = `😊 ${reactionTime}ms - +10 نقاط`;
+            }
+            
+            gameState.score += points;
+            
+            box.style.background = '#6366f1';
+            box.textContent = '✅ أحسنت!';
+            status.textContent = message;
+            status.style.background = '#dcfce7';
+            status.style.color = '#166534';
+            status.classList.remove('hidden');
+            
+            reactionStartTime = 0;
+            
+            updateScoreboard();
+            saveGameState();
+            
+            if (!gameState.hostMode) {
+                setTimeout(startReactionRound, 3000);
+            }
+        }
+
+        function hostNextReaction() {
+            if (!gameState.isHost) return;
+            startReactionRound();
+        }
+
+        // True/False Game
+        const trueFalseQuestions = [
+            { question: 'الشمس تدور حول الأرض', answer: false },
+            { question: 'الماء يتكون من الهيدروجين والأكسجين', answer: true },
+            { question: 'القاهرة هي عاصمة المغرب', answer: false },
+            { question: 'البحر الميت هو أخفض نقطة على سطح الأرض', answer: true },
+            { question: 'الحوت هو نوع من الأسماك', answer: false },
+            { question: 'القطب الشمالي أبرد من القطب الجنوبي', answer: false },
+            { question: 'الفيل هو أكبر حيوان بري', answer: true },
+            { question: 'القمر له ضوء خاص به', answer: false },
+            { question: 'جسم الإنسان يحتوي على 206 عظمة', answer: true },
+            { question: 'البرق أسرع من الرعد', answer: true },
+            { question: 'الطماطم من الخضروات', answer: false },
+            { question: 'النعامة يمكنها الطيران', answer: false },
+            { question: 'الذهب أثقل من الحديد', answer: true },
+            { question: 'القطط لا تستطيع رؤية الألوان', answer: false },
+            { question: 'البحرين دولة جزيرة', answer: true }
+        ];
+
+        let currentTrueFalse = null;
+        let trueFalseAnswered = false;
+
+        function startTrueFalseGame() {
+            gameState.round++;
+            
+            if (gameState.hostMode && gameState.isHost) {
+                document.getElementById('nextTrueFalseBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextTrueFalseBtn').classList.add('hidden');
+            }
+            
+            showNextTrueFalse();
+        }
+
+        function showNextTrueFalse() {
+            trueFalseAnswered = false;
+            currentTrueFalse = trueFalseQuestions[Math.floor(Math.random() * trueFalseQuestions.length)];
+            
+            document.getElementById('trueFalseQuestion').textContent = currentTrueFalse.question;
+            document.getElementById('trueFalseStatus').classList.add('hidden');
+            
+            // Reset button styles
+            const buttons = document.querySelectorAll('#trueFalseGame .answer-btn');
+            buttons.forEach(btn => {
+                btn.style.opacity = '1';
+                btn.style.transform = 'scale(1)';
+            });
+        }
+
+        function selectTrueFalse(answer) {
+            if (trueFalseAnswered) return;
+            
+            trueFalseAnswered = true;
+            const status = document.getElementById('trueFalseStatus');
+            
+            if (answer === currentTrueFalse.answer) {
+                gameState.score += 20;
+                status.textContent = '✅ إجابة صحيحة! +20 نقطة';
+                status.style.background = '#dcfce7';
+                status.style.color = '#166534';
+            } else {
+                status.textContent = '❌ إجابة خاطئة!';
+                status.style.background = '#fee2e2';
+                status.style.color = '#991b1b';
+            }
+            
+            status.classList.remove('hidden');
+            updateScoreboard();
+            saveGameState();
+            
+            if (!gameState.hostMode) {
+                setTimeout(showNextTrueFalse, 2500);
+            }
+        }
+
+        function hostNextTrueFalse() {
+            if (!gameState.isHost) return;
+            showNextTrueFalse();
+        }
+
+        // Word Chain Game
+        const wordChainTopics = [
+            { topic: 'حيوانات', words: ['أسد', 'قط', 'كلب', 'فيل', 'زرافة', 'نمر', 'دب', 'ثعلب'] },
+            { topic: 'فواكه', words: ['تفاح', 'موز', 'برتقال', 'عنب', 'مانجو', 'فراولة', 'كيوي', 'أناناس'] },
+            { topic: 'بلدان', words: ['مصر', 'السعودية', 'الإمارات', 'الأردن', 'لبنان', 'تونس', 'المغرب', 'الجزائر'] },
+            { topic: 'ألوان', words: ['أحمر', 'أزرق', 'أخضر', 'أصفر', 'برتقالي', 'بنفسجي', 'وردي', 'بني'] },
+            { topic: 'مهن', words: ['طبيب', 'معلم', 'مهندس', 'طيار', 'شرطي', 'فنان', 'كاتب', 'رياضي'] }
+        ];
+
+        let currentWordTopic = null;
+        let wordChainList = [];
+
+        function startWordChainGame() {
+            gameState.round++;
+            
+            if (gameState.hostMode && gameState.isHost) {
+                document.getElementById('nextWordChainBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextWordChainBtn').classList.add('hidden');
+            }
+            
+            startWordChainRound();
+        }
+
+        function startWordChainRound() {
+            currentWordTopic = wordChainTopics[Math.floor(Math.random() * wordChainTopics.length)];
+            wordChainList = [];
+            
+            document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
+            document.getElementById('wordChainInput').value = '';
+            document.getElementById('wordChainStatus').classList.add('hidden');
+            document.getElementById('wordList').textContent = 'لا توجد كلمات بعد...';
+        }
+
+        function submitWord() {
+            const input = document.getElementById('wordChainInput');
+            const word = input.value.trim();
+            
+            if (!word) {
+                alert('الرجاء كتابة كلمة');
+                return;
+            }
+            
+            const status = document.getElementById('wordChainStatus');
+            
+            // Check if word already used
+            if (wordChainList.includes(word)) {
+                status.textContent = '❌ هذه الكلمة مستخدمة بالفعل!';
+                status.style.background = '#fee2e2';
+                status.style.color = '#991b1b';
+                status.classList.remove('hidden');
+                return;
+            }
+            
+            // Check if word matches topic
+            const isValid = currentWordTopic.words.some(w => word.includes(w) || w.includes(word));
+            
+            if (isValid) {
+                wordChainList.push(word);
+                gameState.score += 15;
+                
+                status.textContent = `✅ كلمة صحيحة! +15 نقطة`;
+                status.style.background = '#dcfce7';
+                status.style.color = '#166534';
+                
+                // Update word list display
+                const wordListEl = document.getElementById('wordList');
+                wordListEl.innerHTML = wordChainList.map((w, i) => 
+                    `<div style="padding: 5px; background: #e0e7ff; border-radius: 8px; margin: 5px 0;">${i + 1}. ${w}</div>`
+                ).join('');
+            } else {
+                status.textContent = `❌ الكلمة لا تتطابق مع الموضوع "${currentWordTopic.topic}"`;
+                status.style.background = '#fee2e2';
+                status.style.color = '#991b1b';
+            }
+            
+            status.classList.remove('hidden');
+            input.value = '';
+            updateScoreboard();
+            saveGameState();
+        }
+
+        function hostNextWordChain() {
+            if (!gameState.isHost) return;
+            startWordChainRound();
+        }
+
+        // Drawing Game
+        let drawingCanvas = null;
+        let drawingCtx = null;
+        let isDrawing = false;
+        let currentDrawColor = '#000000';
+        let currentDrawingWord = '';
+
+        const drawingWords = [
+            'شمس', 'قمر', 'نجمة', 'بيت', 'شجرة', 'سيارة', 'قطة', 'سمكة',
+            'زهرة', 'قلب', 'وجه مبتسم', 'كأس', 'كتاب', 'مفتاح', 'ساعة', 'هاتف'
+        ];
+
+        function startDrawingGame() {
+            gameState.round++;
+            
+            // Initialize canvas
+            drawingCanvas = document.getElementById('drawingCanvas');
+            drawingCtx = drawingCanvas.getContext('2d');
+            
+            // Set canvas size
+            drawingCanvas.width = drawingCanvas.offsetWidth;
+            drawingCanvas.height = 300;
+            
+            // Setup drawing events
+            drawingCanvas.addEventListener('mousedown', startDrawingOnCanvas);
+            drawingCanvas.addEventListener('mousemove', drawOnCanvas);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch events for mobile
+            drawingCanvas.addEventListener('touchstart', startDrawingOnCanvas);
+            drawingCanvas.addEventListener('touchmove', drawOnCanvas);
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+            
+            if (gameState.hostMode && gameState.isHost) {
+                document.getElementById('nextDrawingBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextDrawingBtn').classList.add('hidden');
+            }
+            
+            startDrawingRound();
+        }
+
+        function startDrawingRound() {
+            currentDrawingWord = drawingWords[Math.floor(Math.random() * drawingWords.length)];
+            document.getElementById('drawingWord').textContent = `ارسم: ${currentDrawingWord}`;
+            document.getElementById('drawingStatus').classList.add('hidden');
+            clearCanvas();
+        }
+
+        function startDrawingOnCanvas(e) {
+            isDrawing = true;
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(x, y);
+            e.preventDefault();
+        }
+
+        function drawOnCanvas(e) {
+            if (!isDrawing) return;
+            
+            const rect = drawingCanvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            drawingCtx.strokeStyle = currentDrawColor;
+            drawingCtx.lineWidth = 3;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+            e.preventDefault();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function setDrawColor(color) {
+            currentDrawColor = color;
+        }
+
+        function clearCanvas() {
+            if (drawingCtx) {
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+        }
+
+        function finishDrawing() {
+            gameState.score += 25;
+            
+            const status = document.getElementById('drawingStatus');
+            status.textContent = '✅ رسمة رائعة! +25 نقطة';
+            status.style.background = '#dcfce7';
+            status.style.color = '#166534';
+            status.classList.remove('hidden');
+            
+            updateScoreboard();
+            saveGameState();
+            
+            if (!gameState.hostMode) {
+                setTimeout(startDrawingRound, 3000);
+            }
+        }
+
+        function hostNextDrawing() {
+            if (!gameState.isHost) return;
+            startDrawingRound();
+        }
+
+        // Memory Match Game
+        const memoryEmojis = ['🌟', '🎨', '🎭', '🎪', '🎯', '🎲', '🎮', '🎸'];
+        let memoryCards = [];
+        let memoryFlipped = [];
+        let memoryMatched = [];
+        let memoryStartTime = 0;
+        let memoryTimerInterval = null;
+
+        function startMemoryGame() {
+            gameState.round++;
+            
+            if (gameState.hostMode && gameState.isHost) {
+                document.getElementById('nextMemoryBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextMemoryBtn').classList.add('hidden');
+            }
+            
+            startMemoryRound();
+        }
+
+        function startMemoryRound() {
+            // Create pairs of cards
+            memoryCards = [...memoryEmojis, ...memoryEmojis]
+                .sort(() => Math.random() - 0.5)
+                .map((emoji, index) => ({ id: index, emoji, flipped: false, matched: false }));
+            
+            memoryFlipped = [];
+            memoryMatched = [];
+            memoryStartTime = Date.now();
+            
+            // Update display
+            document.getElementById('matchCount').textContent = '0';
+            
+            // Generate grid
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            
+            memoryCards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'memory-card';
+                cardEl.style.cssText = `
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 12px;
+                    padding: 30px;
+                    font-size: 32px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    user-select: none;
+                `;
+                cardEl.textContent = '?';
+                cardEl.onclick = () => flipMemoryCard(index);
+                grid.appendChild(cardEl);
+            });
+            
+            // Start timer
+            if (memoryTimerInterval) clearInterval(memoryTimerInterval);
+            memoryTimerInterval = setInterval(updateMemoryTimer, 1000);
+        }
+
+        function updateMemoryTimer() {
+            const elapsed = Math.floor((Date.now() - memoryStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('memoryTimer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function flipMemoryCard(index) {
+            const card = memoryCards[index];
+            if (card.matched || card.flipped || memoryFlipped.length >= 2) return;
+            
+            card.flipped = true;
+            memoryFlipped.push(index);
+            
+            const cardEl = document.getElementById('memoryGrid').children[index];
+            cardEl.textContent = card.emoji;
+            cardEl.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+            
+            if (memoryFlipped.length === 2) {
+                setTimeout(checkMemoryMatch, 800);
+            }
+        }
+
+        function checkMemoryMatch() {
+            const [index1, index2] = memoryFlipped;
+            const card1 = memoryCards[index1];
+            const card2 = memoryCards[index2];
+            
+            if (card1.emoji === card2.emoji) {
+                // Match found!
+                card1.matched = true;
+                card2.matched = true;
+                memoryMatched.push(index1, index2);
+                
+                const cardEl1 = document.getElementById('memoryGrid').children[index1];
+                const cardEl2 = document.getElementById('memoryGrid').children[index2];
+                cardEl1.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+                cardEl2.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+                
+                document.getElementById('matchCount').textContent = memoryMatched.length / 2;
+                
+                // Award points
+                gameState.score += 20;
+                updateScoreboard();
+                saveGameState();
+                
+                // Check if game complete
+                if (memoryMatched.length === memoryCards.length) {
+                    clearInterval(memoryTimerInterval);
+                    const elapsed = Math.floor((Date.now() - memoryStartTime) / 1000);
+                    const bonus = Math.max(0, 100 - elapsed * 2);
+                    gameState.score += bonus;
+                    
+                    document.getElementById('memoryStatus').textContent = 
+                        `🎉 أكملت اللعبة! مكافأة السرعة: +${bonus} نقطة`;
+                    document.getElementById('memoryStatus').style.background = '#dcfce7';
+                    document.getElementById('memoryStatus').style.color = '#166534';
+                    
+                    updateScoreboard();
+                    saveGameState();
+                    
+                    if (!gameState.hostMode) {
+                        setTimeout(startMemoryRound, 4000);
+                    }
+                }
+            } else {
+                // No match - flip back
+                setTimeout(() => {
+                    card1.flipped = false;
+                    card2.flipped = false;
+                    
+                    const cardEl1 = document.getElementById('memoryGrid').children[index1];
+                    const cardEl2 = document.getElementById('memoryGrid').children[index2];
+                    cardEl1.textContent = '?';
+                    cardEl2.textContent = '?';
+                    cardEl1.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    cardEl2.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                }, 500);
+            }
+            
+            memoryFlipped = [];
+        }
+
+        function hostNextMemory() {
+            if (!gameState.isHost) return;
+            startMemoryRound();
+        }
+
         // Universal Scoreboard with Real-time Updates
         function updateScoreboard() {
             // Check if we're on a screen with scoreboard
@@ -1565,49 +2231,11 @@
                 return;
             }
             
-            console.log('🔥 Setting up Firebase listener for room:', gameState.roomCode);
+            console.log('⚡ Setting up INSTANT Firebase listener for room:', gameState.roomCode);
             
             const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
             
-            // CRITICAL: Immediately fetch existing players first
-            roomRef.once('value', (snapshot) => {
-                const players = [];
-                snapshot.forEach((childSnapshot) => {
-                    const player = childSnapshot.val();
-                    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-                    if (player.timestamp > fiveMinutesAgo) {
-                        players.push(player);
-                    }
-                });
-                
-                console.log('🔥 Initial Firebase load - Players:', players.map(p => `${p.name}(${p.score})`));
-                
-                // NOW update our player data in Firebase (after reading existing players)
-                updateRoomScores();
-                
-                // Update scoreboard with all players (including us)
-                setTimeout(() => {
-                    roomRef.once('value', (snapshot2) => {
-                        const allPlayers = [];
-                        snapshot2.forEach((childSnapshot) => {
-                            const player = childSnapshot.val();
-                            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-                            if (player.timestamp > fiveMinutesAgo) {
-                                allPlayers.push(player);
-                            }
-                        });
-                        
-                        console.log('🔥 After updating self - All players:', allPlayers.map(p => `${p.name}(${p.score})`));
-                        updateScoreboardWithPlayers(allPlayers);
-                        
-                        // Update player count
-                        document.getElementById('playerCount').textContent = 
-                            `عدد اللاعبين: ${allPlayers.length}`;
-                    });
-                }, 200);
-            });
-            
-            // Then set up real-time listener for future changes
+            // STEP 1: Set up LIVE listener FIRST (this is key for instant updates!)
             roomRef.on('value', (snapshot) => {
                 const players = [];
                 snapshot.forEach((childSnapshot) => {
@@ -1618,15 +2246,21 @@
                     }
                 });
                 
-                console.log('🔥 Firebase listener update - Players:', players.map(p => `${p.name}(${p.score})`));
+                console.log('⚡ LIVE UPDATE - Players:', players.map(p => `${p.name}(${p.score})`));
                 
-                // Update scoreboard with all players
+                // Update scoreboard INSTANTLY with all players
                 updateScoreboardWithPlayers(players);
                 
                 // Update player count
                 document.getElementById('playerCount').textContent = 
                     `عدد اللاعبين: ${players.length}`;
             });
+            
+            // STEP 2: Then write our player data (listener will catch it automatically!)
+            setTimeout(() => {
+                updateRoomScores();
+                console.log('✅ Player data written - listener will auto-update!');
+            }, 100);
             
             // Listen for host mode game state updates
             if (!gameState.isHost) {
