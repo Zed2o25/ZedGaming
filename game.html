@@ -764,7 +764,7 @@
                 <h4 style="color: #6366f1; margin-bottom: 10px;">الكلمات السابقة:</h4>
                 <div id="wordList" style="color: #64748b;">لا توجد كلمات بعد...</div>
             </div>
-            <button class="game-mode-btn submit-btn hidden" id="nextWordChainBtn" onclick="hostNextWordChain()">موضوع جديد</button>
+            <button class="submit-btn hidden" id="nextWordChainBtn" onclick="hostNextWordChain()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 15px;">🔄 موضوع جديد | New Topic</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
@@ -2104,11 +2104,13 @@
 
         let currentWordTopic = null;
         let wordChainList = [];
+        let wordChainInitializing = false; // Prevent concurrent initialization
 
         function startWordChainGame() {
             gameState.round++;
             
-            if (gameState.hostMode && gameState.isHost) {
+            // Host ALWAYS sees "Next Topic" button (in both normal and host-controlled mode)
+            if (gameState.isHost) {
                 document.getElementById('nextWordChainBtn').classList.remove('hidden');
             } else {
                 document.getElementById('nextWordChainBtn').classList.add('hidden');
@@ -2117,16 +2119,61 @@
             // IMPORTANT: ALL players (including host) need to listen for updates!
             setupWordChainListener();
             
-            // Host: Check if topic exists, if not create one
+            // Host: Initialize or load existing topic
             if (gameState.isHost) {
-                initializeWordChainForHost();
+                // Prevent concurrent initialization on rapid refresh
+                if (wordChainInitializing) {
+                    console.log('⏳ Word Chain already initializing, skipping...');
+                    return;
+                }
+                // Small delay to let Firebase initialize if needed
+                setTimeout(() => initializeWordChainForHost(), 100);
+            } else {
+                // Non-host player: Load existing data from Firebase immediately
+                loadWordChainForPlayer();
             }
         }
         
-        function initializeWordChainForHost() {
+        function loadWordChainForPlayer() {
             if (!isFirebaseReady || !gameState.roomCode) {
-                // Fallback if Firebase not ready
+                console.log('⚠️ Player: Firebase not ready for Word Chain load');
+                return;
+            }
+            
+            console.log('📥 Player loading Word Chain data...');
+            const wordChainRef = database.ref(`rooms/${gameState.roomCode}/wordChain`);
+            wordChainRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.topic && data.topic.topic) {
+                    currentWordTopic = data.topic;
+                    wordChainList = data.words || [];
+                    
+                    const promptEl = document.getElementById('wordChainPrompt');
+                    if (promptEl) {
+                        promptEl.textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    }
+                    updateWordListDisplay();
+                    console.log('✅ Player loaded Word Chain:', currentWordTopic.topic);
+                } else {
+                    console.log('⏳ Player: Waiting for host to create topic...');
+                }
+            });
+        }
+        
+        function initializeWordChainForHost() {
+            // Prevent concurrent calls
+            if (wordChainInitializing) {
+                console.log('⛔ Already initializing Word Chain, aborting duplicate call');
+                return;
+            }
+            
+            wordChainInitializing = true;
+            console.log('🗒️ Host initializing Word Chain. Firebase ready:', isFirebaseReady);
+            
+            if (!isFirebaseReady || !gameState.roomCode) {
+                console.log('⚠️ Firebase not ready, creating local topic');
                 startWordChainRound();
+                wordChainInitializing = false;
                 return;
             }
             
@@ -2134,36 +2181,61 @@
             const wordChainRef = database.ref(`rooms/${gameState.roomCode}/wordChain`);
             wordChainRef.once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data && data.topic) {
-                    // Topic already exists - don't create new one!
-                    console.log('🔄 Word Chain topic already exists:', data.topic.topic);
+                console.log('🔍 Firebase check result:', data);
+                
+                if (data && data.topic && data.topic.topic) {
+                    // Topic already exists - use it!
+                    console.log('✅ Word Chain topic EXISTS:', data.topic.topic, '(NOT creating new)');
                     currentWordTopic = data.topic;
                     wordChainList = data.words || [];
-                    document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    
+                    // Update display
+                    const promptEl = document.getElementById('wordChainPrompt');
+                    if (promptEl) {
+                        promptEl.textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    }
                     updateWordListDisplay();
                 } else {
                     // No topic exists - create new one
-                    console.log('🆕 Creating new Word Chain topic');
+                    console.log('🆕 No existing topic, creating NEW one');
                     startWordChainRound();
                 }
+                
+                // Release the lock after completion
+                wordChainInitializing = false;
+            }).catch((error) => {
+                console.error('❌ Firebase read error:', error);
+                // Fallback to creating new topic
+                startWordChainRound();
+                wordChainInitializing = false;
             });
         }
 
         function setupWordChainListener() {
-            if (!isFirebaseReady || !gameState.roomCode) return;
+            if (!isFirebaseReady || !gameState.roomCode) {
+                console.log('⚠️ Cannot setup Word Chain listener - Firebase not ready');
+                return;
+            }
             
             const wordChainRef = database.ref(`rooms/${gameState.roomCode}/wordChain`);
             wordChainRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && data.topic && data.topic.topic) {
                     currentWordTopic = data.topic;
                     wordChainList = data.words || [];
                     
-                    document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    const promptEl = document.getElementById('wordChainPrompt');
+                    if (promptEl) {
+                        promptEl.textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    }
                     updateWordListDisplay();
-                    console.log('📝 Word Chain synced:', currentWordTopic.topic, wordChainList);
+                    console.log('✅ Word Chain synced - Topic:', currentWordTopic.topic, 'Words:', wordChainList.length);
+                } else {
+                    console.log('ℹ️ Word Chain listener: No data yet');
                 }
             });
+            
+            console.log('👂 Word Chain listener setup complete');
         }
 
         function startWordChainRound() {
