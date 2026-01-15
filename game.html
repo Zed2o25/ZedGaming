@@ -590,22 +590,38 @@
 
         <!-- Drawing Game -->
         <div class="game-area hidden" id="drawingGame">
-            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">🎨 ارسم الكلمة!</h3>
-            <div class="status-message" id="drawingWord" style="font-size: 24px; font-weight: bold;">...</div>
-            <canvas id="drawingCanvas" style="width: 100%; height: 300px; background: white; border-radius: 15px; border: 3px solid #6366f1; cursor: crosshair; touch-action: none;"></canvas>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0;">
-                <button class="answer-btn" style="background: #000; padding: 15px;" onclick="setDrawColor('#000')">⚫</button>
-                <button class="answer-btn" style="background: #ef4444; padding: 15px;" onclick="setDrawColor('#ef4444')">🔴</button>
-                <button class="answer-btn" style="background: #3b82f6; padding: 15px;" onclick="setDrawColor('#3b82f6')">🔵</button>
-                <button class="answer-btn" style="background: #22c55e; padding: 15px;" onclick="setDrawColor('#22c55e')">🟢</button>
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 10px;">🎨 لعبة الرسم والتخمين</h3>
+            <div class="status-message" id="drawingTurnInfo" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">جاري التحميل...</div>
+            <div class="status-message" id="drawingWord" style="font-size: 24px; font-weight: bold; margin-bottom: 10px; display: none;">...</div>
+            <canvas id="drawingCanvas" style="width: 100%; height: 280px; background: white; border-radius: 15px; border: 3px solid #6366f1; cursor: crosshair; touch-action: none;"></canvas>
+            
+            <!-- Drawing Tools (only for current drawer) -->
+            <div id="drawingTools" style="display: none;">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0;">
+                    <button class="answer-btn" style="background: #000; padding: 15px;" onclick="setDrawColor('#000')">⚫</button>
+                    <button class="answer-btn" style="background: #ef4444; padding: 15px;" onclick="setDrawColor('#ef4444')">🔴</button>
+                    <button class="answer-btn" style="background: #3b82f6; padding: 15px;" onclick="setDrawColor('#3b82f6')">🔵</button>
+                    <button class="answer-btn" style="background: #22c55e; padding: 15px;" onclick="setDrawColor('#22c55e')">🟢</button>
+                </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
-                <button class="submit-btn" onclick="clearCanvas()" style="background: #f59e0b;">🗑️ مسح</button>
-                <button class="submit-btn" onclick="finishDrawing()" style="background: #22c55e;">✅ انتهيت</button>
+            
+            <!-- Guessing Input (only for non-drawers) -->
+            <div id="guessingArea" style="display: none; margin: 15px 0;">
+                <input type="text" class="name-input" id="guessInput" placeholder="خمّن ما الرسمة..." style="font-size: 20px;">
+                <button class="submit-btn" onclick="submitGuess()" style="margin-top: 10px;">خمّن!</button>
             </div>
+            
             <div class="status-message hidden" id="drawingStatus"></div>
-            <button class="game-mode-btn submit-btn hidden" id="nextDrawingBtn" onclick="hostNextDrawing()">رسمة جديدة</button>
-            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            
+            <!-- Host Controls -->
+            <div id="hostDrawingControls" style="display: none; margin-top: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button class="submit-btn" onclick="hostEraseDrawing()" style="background: #f59e0b;">🗑️ مسح اللوحة</button>
+                    <button class="submit-btn" onclick="hostNextDrawing()" style="background: #6366f1;">➡️ الدور التالي</button>
+                </div>
+            </div>
+            
+            <button class="game-mode-btn back-btn" onclick="backToMenu()" style="margin-top: 15px;">عودة للقائمة</button>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
 
@@ -1185,6 +1201,28 @@
             if (numberTimer) {
                 clearInterval(numberTimer);
                 numberTimer = null;
+            }
+            
+            if (memoryTimerInterval) {
+                clearInterval(memoryTimerInterval);
+                memoryTimerInterval = null;
+            }
+            
+            if (reactionTimeout) {
+                clearTimeout(reactionTimeout);
+                reactionTimeout = null;
+            }
+            
+            // Clean up drawing game
+            if (isFirebaseReady && gameState.roomCode) {
+                const drawingStateRef = database.ref(`rooms/${gameState.roomCode}/drawingState`);
+                drawingStateRef.off();
+                
+                const strokesRef = database.ref(`rooms/${gameState.roomCode}/drawingStrokes`);
+                strokesRef.off();
+                
+                const clearRef = database.ref(`rooms/${gameState.roomCode}/clearCanvas`);
+                clearRef.off();
             }
             
             gameState.currentGame = null;
@@ -1870,16 +1908,22 @@
             startWordChainRound();
         }
 
-        // Drawing Game
+        // Drawing Game - Multiplayer Turn-Based with Real-time Drawing Sync
         let drawingCanvas = null;
         let drawingCtx = null;
         let isDrawing = false;
         let currentDrawColor = '#000000';
         let currentDrawingWord = '';
+        let currentDrawerName = '';
+        let drawingPlayers = [];
+        let currentDrawerIndex = 0;
+        let roundGuessed = false;
+        let drawingListener = null;
 
         const drawingWords = [
             'شمس', 'قمر', 'نجمة', 'بيت', 'شجرة', 'سيارة', 'قطة', 'سمكة',
-            'زهرة', 'قلب', 'وجه مبتسم', 'كأس', 'كتاب', 'مفتاح', 'ساعة', 'هاتف'
+            'زهرة', 'قلب', 'وجه مبتسم', 'كأس', 'كتاب', 'مفتاح', 'ساعة', 'هاتف',
+            'طائرة', 'مركب', 'دراجة', 'فنجان', 'كرة', 'بالون', 'جبل', 'غيمة'
         ];
 
         function startDrawingGame() {
@@ -1890,95 +1934,344 @@
             drawingCtx = drawingCanvas.getContext('2d');
             
             // Set canvas size
-            drawingCanvas.width = drawingCanvas.offsetWidth;
-            drawingCanvas.height = 300;
+            const rect = drawingCanvas.getBoundingClientRect();
+            drawingCanvas.width = rect.width;
+            drawingCanvas.height = 280;
             
-            // Setup drawing events
+            // Show host controls if host
+            if (gameState.isHost) {
+                document.getElementById('hostDrawingControls').style.display = 'block';
+            }
+            
+            // Setup Firebase listener for drawing strokes
+            setupDrawingListener();
+            
+            // Load player list and start first round
+            if (isFirebaseReady) {
+                const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
+                roomRef.once('value', (snapshot) => {
+                    drawingPlayers = [];
+                    snapshot.forEach((child) => {
+                        const player = child.val();
+                        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                        if (player.timestamp > fiveMinutesAgo) {
+                            drawingPlayers.push(player.name);
+                        }
+                    });
+                    
+                    console.log('🎨 Drawing game players:', drawingPlayers);
+                    
+                    if (drawingPlayers.length > 0) {
+                        if (gameState.isHost) {
+                            startDrawingRound();
+                        }
+                    } else {
+                        document.getElementById('drawingTurnInfo').textContent = '⚠️ لا يوجد لاعبون';
+                    }
+                });
+            } else {
+                // Fallback to localStorage
+                drawingPlayers = [gameState.playerName];
+                startDrawingRound();
+            }
+        }
+
+        function setupDrawingListener() {
+            if (!isFirebaseReady || !gameState.roomCode) return;
+            
+            // Listen for drawing state changes
+            const drawingStateRef = database.ref(`rooms/${gameState.roomCode}/drawingState`);
+            drawingStateRef.on('value', (snapshot) => {
+                const state = snapshot.val();
+                if (!state) return;
+                
+                console.log('🎯 Drawing state update:', state);
+                
+                // Update current drawer and word
+                currentDrawerName = state.currentDrawer;
+                currentDrawingWord = state.word || '';
+                roundGuessed = state.guessed || false;
+                
+                // Update UI
+                updateDrawingUI();
+                
+                // Clear canvas if new round
+                if (state.clearCanvas) {
+                    clearCanvas();
+                }
+            });
+            
+            // Listen for drawing strokes
+            const strokesRef = database.ref(`rooms/${gameState.roomCode}/drawingStrokes`);
+            strokesRef.on('child_added', (snapshot) => {
+                const stroke = snapshot.val();
+                if (stroke.drawer !== gameState.playerName) {
+                    // Draw stroke from other player
+                    drawStroke(stroke);
+                }
+            });
+            
+            // Listen for canvas clear events
+            const clearRef = database.ref(`rooms/${gameState.roomCode}/clearCanvas`);
+            clearRef.on('value', (snapshot) => {
+                const timestamp = snapshot.val();
+                if (timestamp && timestamp > (Date.now() - 1000)) {
+                    clearCanvas();
+                }
+            });
+        }
+
+        function startDrawingRound() {
+            if (!gameState.isHost) return;
+            
+            // Pick next drawer
+            currentDrawerIndex = currentDrawerIndex % drawingPlayers.length;
+            currentDrawerName = drawingPlayers[currentDrawerIndex];
+            currentDrawingWord = drawingWords[Math.floor(Math.random() * drawingWords.length)];
+            roundGuessed = false;
+            
+            console.log(`🎯 Starting round - Drawer: ${currentDrawerName}, Word: ${currentDrawingWord}`);
+            
+            // Clear canvas for all players
+            if (isFirebaseReady) {
+                database.ref(`rooms/${gameState.roomCode}/clearCanvas`).set(Date.now());
+            }
+            clearCanvas();
+            
+            // Broadcast drawing state
+            if (isFirebaseReady) {
+                const drawingStateRef = database.ref(`rooms/${gameState.roomCode}/drawingState`);
+                drawingStateRef.set({
+                    currentDrawer: currentDrawerName,
+                    word: currentDrawingWord,
+                    guessed: false,
+                    timestamp: Date.now()
+                });
+                
+                // Clear old strokes
+                database.ref(`rooms/${gameState.roomCode}/drawingStrokes`).remove();
+            }
+            
+            document.getElementById('drawingStatus').classList.add('hidden');
+        }
+
+        function updateDrawingUI() {
+            const isMyTurn = currentDrawerName === gameState.playerName;
+            const turnInfo = document.getElementById('drawingTurnInfo');
+            const wordDisplay = document.getElementById('drawingWord');
+            const drawingTools = document.getElementById('drawingTools');
+            const guessingArea = document.getElementById('guessingArea');
+            
+            if (isMyTurn) {
+                // I'm drawing
+                turnInfo.textContent = `🎯 دورك للرسم!`;
+                turnInfo.style.background = '#dcfce7';
+                turnInfo.style.color = '#166534';
+                
+                wordDisplay.textContent = `ارسم: ${currentDrawingWord}`;
+                wordDisplay.style.display = 'block';
+                
+                drawingTools.style.display = 'block';
+                guessingArea.style.display = 'none';
+                
+                // Enable drawing
+                enableDrawing();
+            } else {
+                // I'm guessing
+                turnInfo.textContent = `🔍 ${currentDrawerName} يرسم الآن... خمّن!`;
+                turnInfo.style.background = '#dbeafe';
+                turnInfo.style.color = '#1e40af';
+                
+                wordDisplay.style.display = 'none';
+                drawingTools.style.display = 'none';
+                
+                if (!roundGuessed) {
+                    guessingArea.style.display = 'block';
+                    document.getElementById('guessInput').value = '';
+                } else {
+                    guessingArea.style.display = 'none';
+                }
+                
+                // Disable drawing
+                disableDrawing();
+            }
+        }
+
+        function enableDrawing() {
+            drawingCanvas.style.cursor = 'crosshair';
             drawingCanvas.addEventListener('mousedown', startDrawingOnCanvas);
             drawingCanvas.addEventListener('mousemove', drawOnCanvas);
             drawingCanvas.addEventListener('mouseup', stopDrawing);
             drawingCanvas.addEventListener('mouseout', stopDrawing);
-            
-            // Touch events for mobile
             drawingCanvas.addEventListener('touchstart', startDrawingOnCanvas);
             drawingCanvas.addEventListener('touchmove', drawOnCanvas);
             drawingCanvas.addEventListener('touchend', stopDrawing);
-            
-            if (gameState.hostMode && gameState.isHost) {
-                document.getElementById('nextDrawingBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('nextDrawingBtn').classList.add('hidden');
-            }
-            
-            startDrawingRound();
         }
 
-        function startDrawingRound() {
-            currentDrawingWord = drawingWords[Math.floor(Math.random() * drawingWords.length)];
-            document.getElementById('drawingWord').textContent = `ارسم: ${currentDrawingWord}`;
-            document.getElementById('drawingStatus').classList.add('hidden');
-            clearCanvas();
+        function disableDrawing() {
+            drawingCanvas.style.cursor = 'default';
+            drawingCanvas.removeEventListener('mousedown', startDrawingOnCanvas);
+            drawingCanvas.removeEventListener('mousemove', drawOnCanvas);
+            drawingCanvas.removeEventListener('mouseup', stopDrawing);
+            drawingCanvas.removeEventListener('mouseout', stopDrawing);
+            drawingCanvas.removeEventListener('touchstart', startDrawingOnCanvas);
+            drawingCanvas.removeEventListener('touchmove', drawOnCanvas);
+            drawingCanvas.removeEventListener('touchend', stopDrawing);
         }
 
         function startDrawingOnCanvas(e) {
+            if (currentDrawerName !== gameState.playerName) return;
+            
             isDrawing = true;
             const rect = drawingCanvas.getBoundingClientRect();
             const x = (e.clientX || e.touches[0].clientX) - rect.left;
             const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
             drawingCtx.beginPath();
             drawingCtx.moveTo(x, y);
             e.preventDefault();
         }
 
         function drawOnCanvas(e) {
-            if (!isDrawing) return;
+            if (!isDrawing || currentDrawerName !== gameState.playerName) return;
             
             const rect = drawingCanvas.getBoundingClientRect();
             const x = (e.clientX || e.touches[0].clientX) - rect.left;
             const y = (e.clientY || e.touches[0].clientY) - rect.top;
             
+            // Draw locally
             drawingCtx.strokeStyle = currentDrawColor;
             drawingCtx.lineWidth = 3;
             drawingCtx.lineCap = 'round';
             drawingCtx.lineTo(x, y);
             drawingCtx.stroke();
+            
+            // Broadcast stroke to Firebase
+            if (isFirebaseReady && gameState.roomCode) {
+                const strokesRef = database.ref(`rooms/${gameState.roomCode}/drawingStrokes`);
+                strokesRef.push({
+                    drawer: gameState.playerName,
+                    x: x / drawingCanvas.width,  // Normalize coordinates
+                    y: y / drawingCanvas.height,
+                    color: currentDrawColor,
+                    timestamp: Date.now()
+                });
+            }
+            
             e.preventDefault();
         }
 
+        function drawStroke(stroke) {
+            if (!drawingCtx) return;
+            
+            // Convert normalized coordinates back to canvas size
+            const x = stroke.x * drawingCanvas.width;
+            const y = stroke.y * drawingCanvas.height;
+            
+            drawingCtx.strokeStyle = stroke.color || '#000000';
+            drawingCtx.lineWidth = 3;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineTo(x, y);
+            drawingCtx.stroke();
+        }
+
         function stopDrawing() {
-            isDrawing = false;
+            if (isDrawing) {
+                isDrawing = false;
+                drawingCtx.beginPath(); // Reset path for next stroke
+            }
         }
 
         function setDrawColor(color) {
             currentDrawColor = color;
+            if (drawingCtx) {
+                drawingCtx.beginPath(); // Start new path with new color
+            }
         }
 
         function clearCanvas() {
             if (drawingCtx) {
                 drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.beginPath();
             }
         }
 
-        function finishDrawing() {
-            gameState.score += 25;
+        function submitGuess() {
+            if (currentDrawerName === gameState.playerName) return;
+            if (roundGuessed) return;
+            
+            const guessInput = document.getElementById('guessInput');
+            const guess = guessInput.value.trim();
+            
+            if (!guess) {
+                alert('الرجاء كتابة تخمينك');
+                return;
+            }
+            
+            // Check if guess is correct
+            const isCorrect = guess === currentDrawingWord || 
+                            guess.includes(currentDrawingWord) || 
+                            currentDrawingWord.includes(guess);
             
             const status = document.getElementById('drawingStatus');
-            status.textContent = '✅ رسمة رائعة! +25 نقطة';
-            status.style.background = '#dcfce7';
-            status.style.color = '#166534';
-            status.classList.remove('hidden');
             
-            updateScoreboard();
-            saveGameState();
-            
-            if (!gameState.hostMode) {
-                setTimeout(startDrawingRound, 3000);
+            if (isCorrect) {
+                // Correct guess!
+                gameState.score += 40;
+                roundGuessed = true;
+                
+                status.textContent = `🎉 صحيح! الإجابة: ${currentDrawingWord} - +40 نقطة`;
+                status.style.background = '#dcfce7';
+                status.style.color = '#166534';
+                status.classList.remove('hidden');
+                
+                // Hide guessing area
+                document.getElementById('guessingArea').style.display = 'none';
+                
+                // Update Firebase state
+                if (isFirebaseReady) {
+                    database.ref(`rooms/${gameState.roomCode}/drawingState/guessed`).set(true);
+                }
+                
+                updateScoreboard();
+                saveGameState();
+                
+                console.log(`✅ ${gameState.playerName} guessed correctly!`);
+            } else {
+                status.textContent = '❌ حاول مرة أخرى!';
+                status.style.background = '#fee2e2';
+                status.style.color = '#991b1b';
+                status.classList.remove('hidden');
+                
+                guessInput.value = '';
+                
+                setTimeout(() => {
+                    status.classList.add('hidden');
+                }, 2000);
             }
+        }
+
+        function hostEraseDrawing() {
+            if (!gameState.isHost) return;
+            
+            // Clear canvas for all players
+            if (isFirebaseReady) {
+                database.ref(`rooms/${gameState.roomCode}/clearCanvas`).set(Date.now());
+                database.ref(`rooms/${gameState.roomCode}/drawingStrokes`).remove();
+            }
+            
+            clearCanvas();
+            console.log('🗑️ Host cleared canvas');
         }
 
         function hostNextDrawing() {
             if (!gameState.isHost) return;
+            
+            // Move to next player
+            currentDrawerIndex++;
             startDrawingRound();
+            
+            console.log('➡️ Host started next drawing round');
         }
 
         // Memory Match Game
