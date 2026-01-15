@@ -2117,10 +2117,36 @@
             // IMPORTANT: ALL players (including host) need to listen for updates!
             setupWordChainListener();
             
-            // Host also initializes the round
+            // Host: Check if topic exists, if not create one
             if (gameState.isHost) {
-                startWordChainRound();
+                initializeWordChainForHost();
             }
+        }
+        
+        function initializeWordChainForHost() {
+            if (!isFirebaseReady || !gameState.roomCode) {
+                // Fallback if Firebase not ready
+                startWordChainRound();
+                return;
+            }
+            
+            // Check if topic already exists in Firebase
+            const wordChainRef = database.ref(`rooms/${gameState.roomCode}/wordChain`);
+            wordChainRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.topic) {
+                    // Topic already exists - don't create new one!
+                    console.log('🔄 Word Chain topic already exists:', data.topic.topic);
+                    currentWordTopic = data.topic;
+                    wordChainList = data.words || [];
+                    document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    updateWordListDisplay();
+                } else {
+                    // No topic exists - create new one
+                    console.log('🆕 Creating new Word Chain topic');
+                    startWordChainRound();
+                }
+            });
         }
 
         function setupWordChainListener() {
@@ -2141,6 +2167,7 @@
         }
 
         function startWordChainRound() {
+            // This function creates a NEW topic (used by "Next Round" button)
             const selectedTopic = wordChainTopics[Math.floor(Math.random() * wordChainTopics.length)];
             currentWordTopic = selectedTopic;
             wordChainList = [];
@@ -2152,13 +2179,13 @@
                     words: [],
                     timestamp: Date.now()
                 });
-                console.log('🎯 Host started Word Chain:', currentWordTopic.topic);
+                console.log('🎯 Host started NEW Word Chain round:', currentWordTopic.topic);
             }
             
             document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
             document.getElementById('wordChainInput').value = '';
             document.getElementById('wordChainStatus').classList.add('hidden');
-            document.getElementById('wordList').textContent = 'لا توجد كلمات بعد...';
+            updateWordListDisplay();
         }
         
         function updateWordListDisplay() {
