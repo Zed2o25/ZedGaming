@@ -622,6 +622,7 @@
             playerName: '',
             players: [],
             currentGame: null,
+            currentScreen: 'joinScreen', // Track which screen is currently visible
             score: 0,
             round: 0,
             isHost: false,
@@ -649,6 +650,7 @@
             gameState.isHost = true;
             gameState.hostMode = false;
             gameState.isPrivate = false;
+            gameState.currentScreen = 'gameModeScreen';
             
             document.getElementById('roomCode').textContent = gameState.roomCode;
             document.getElementById('joinScreen').classList.add('hidden');
@@ -691,6 +693,7 @@
             gameState.score = 0;
             gameState.isHost = false;
             gameState.hostMode = false; // Default to user-controlled mode
+            gameState.currentScreen = 'gameModeScreen';
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('joinScreen').classList.add('hidden');
@@ -831,6 +834,7 @@
             gameState.score = 0;
             gameState.isHost = false;
             gameState.hostMode = false; // Will sync from Firebase
+            gameState.currentScreen = 'gameModeScreen';
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('roomBrowserScreen').classList.add('hidden');
@@ -963,18 +967,54 @@
                 gameState = JSON.parse(saved);
                 if (gameState.roomCode) {
                     document.getElementById('roomCode').textContent = gameState.roomCode;
-                    document.getElementById('joinScreen').classList.add('hidden');
-                    document.getElementById('gameModeScreen').classList.remove('hidden');
-                    updatePlayerCount();
-                    updateScoreboard();
+                    
+                    // Hide all screens first
+                    document.querySelectorAll('.game-area').forEach(el => el.classList.add('hidden'));
+                    
+                    // Restore the exact screen user was on
+                    const screenToShow = gameState.currentScreen || 'gameModeScreen';
+                    const screenEl = document.getElementById(screenToShow);
+                    if (screenEl) {
+                        screenEl.classList.remove('hidden');
+                        console.log('🔄 Restored screen:', screenToShow);
+                    } else {
+                        // Fallback to game mode screen
+                        document.getElementById('gameModeScreen').classList.remove('hidden');
+                    }
+                    
+                    // If user was in a game, restart it
+                    if (gameState.currentGame && !screenToShow.includes('Screen')) {
+                        console.log('🎮 Restarting game:', gameState.currentGame);
+                        // Don't call startGame as it will hide the current screen
+                        // Just ensure the game screen is visible
+                        const gameScreenMap = {
+                            'color': 'colorGame',
+                            'quiz': 'quizGame',
+                            'number': 'numberGame'
+                        };
+                        const gameScreen = gameScreenMap[gameState.currentGame];
+                        if (gameScreen) {
+                            document.getElementById(gameScreen).classList.remove('hidden');
+                            
+                            // Restart the specific game
+                            if (gameState.currentGame === 'color') {
+                                startColorGame();
+                            } else if (gameState.currentGame === 'quiz') {
+                                startQuizGame();
+                            } else if (gameState.currentGame === 'number') {
+                                startNumberGame();
+                            }
+                        }
+                    }
+                    
                     updateGameModeDisplay();
                     updatePrivateModeDisplay();
-                    startScoreboardAutoRefresh();
                     
                     // Wait for Firebase to be ready before setting up listener
                     if (isFirebaseReady) {
                         console.log('🔄 Resuming session - Setting up Firebase listener');
                         setupRoomListener();
+                        // Listener will handle scoreboard and player count updates
                     } else {
                         console.log('⏳ Waiting for Firebase connection before resuming...');
                         // Wait for Firebase to connect
@@ -983,9 +1023,12 @@
                                 clearInterval(waitForFirebase);
                                 console.log('✅ Firebase ready - Setting up listener');
                                 setupRoomListener();
+                                // Listener will handle scoreboard and player count updates
                             }
                         }, 100);
                     }
+                    
+                    startScoreboardAutoRefresh();
                 }
             }
         }
@@ -995,15 +1038,20 @@
             document.getElementById('gameModeScreen').classList.add('hidden');
             
             if (type === 'color') {
+                gameState.currentScreen = 'colorGame';
                 document.getElementById('colorGame').classList.remove('hidden');
                 startColorGame();
             } else if (type === 'quiz') {
+                gameState.currentScreen = 'quizGame';
                 document.getElementById('quizGame').classList.remove('hidden');
                 startQuizGame();
             } else if (type === 'number') {
+                gameState.currentScreen = 'numberGame';
                 document.getElementById('numberGame').classList.remove('hidden');
                 startNumberGame();
             }
+            
+            saveGameState();
         }
 
         function backToMenu() {
@@ -1013,8 +1061,13 @@
                 numberTimer = null;
             }
             
+            gameState.currentGame = null;
+            gameState.currentScreen = 'gameModeScreen';
+            
             document.querySelectorAll('.game-area').forEach(el => el.classList.add('hidden'));
             document.getElementById('gameModeScreen').classList.remove('hidden');
+            
+            saveGameState();
         }
 
         // Color Game
@@ -1529,12 +1582,29 @@
                 
                 console.log('🔥 Initial Firebase load - Players:', players.map(p => `${p.name}(${p.score})`));
                 
-                // Update scoreboard with existing players immediately
-                updateScoreboardWithPlayers(players);
+                // NOW update our player data in Firebase (after reading existing players)
+                updateRoomScores();
                 
-                // Update player count
-                document.getElementById('playerCount').textContent = 
-                    `عدد اللاعبين: ${players.length}`;
+                // Update scoreboard with all players (including us)
+                setTimeout(() => {
+                    roomRef.once('value', (snapshot2) => {
+                        const allPlayers = [];
+                        snapshot2.forEach((childSnapshot) => {
+                            const player = childSnapshot.val();
+                            const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                            if (player.timestamp > fiveMinutesAgo) {
+                                allPlayers.push(player);
+                            }
+                        });
+                        
+                        console.log('🔥 After updating self - All players:', allPlayers.map(p => `${p.name}(${p.score})`));
+                        updateScoreboardWithPlayers(allPlayers);
+                        
+                        // Update player count
+                        document.getElementById('playerCount').textContent = 
+                            `عدد اللاعبين: ${allPlayers.length}`;
+                    });
+                }, 200);
             });
             
             // Then set up real-time listener for future changes
