@@ -1181,11 +1181,11 @@
             gameState.score = 0;
             gameState.isHost = false;
             gameState.hostMode = false; // Will sync from Firebase
-            gameState.currentScreen = 'gameModeScreen';
+            gameState.currentScreen = 'roleSelectionScreen';
             
             document.getElementById('roomCode').textContent = code;
             document.getElementById('roomBrowserScreen').classList.add('hidden');
-            document.getElementById('gameModeScreen').classList.remove('hidden');
+            document.getElementById('roleSelectionScreen').classList.remove('hidden');
             
             updatePlayerCount();
             updateRoomScores(); // Save player to room immediately
