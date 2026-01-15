@@ -2114,12 +2114,12 @@
                 document.getElementById('nextWordChainBtn').classList.add('hidden');
             }
             
-            // Host starts the round
+            // IMPORTANT: ALL players (including host) need to listen for updates!
+            setupWordChainListener();
+            
+            // Host also initializes the round
             if (gameState.isHost) {
                 startWordChainRound();
-            } else {
-                // Non-host: Listen for Firebase data
-                setupWordChainListener();
             }
         }
 
@@ -2166,9 +2166,15 @@
             if (wordChainList.length === 0) {
                 wordListEl.textContent = 'لا توجد كلمات بعد...';
             } else {
-                wordListEl.innerHTML = wordChainList.map((w, i) => 
-                    `<div style="padding: 5px; background: #e0e7ff; border-radius: 8px; margin: 5px 0;">${i + 1}. ${w}</div>`
-                ).join('');
+                wordListEl.innerHTML = wordChainList.map((entry, i) => {
+                    // Support both old format (string) and new format (object with word + player)
+                    const word = typeof entry === 'string' ? entry : entry.word;
+                    const player = typeof entry === 'string' ? '' : entry.player;
+                    const isMe = player === gameState.playerName;
+                    const playerLabel = player ? ` - ${isMe ? '✨ أنت' : player}` : '';
+                    const bgColor = isMe ? '#dcfce7' : '#e0e7ff';
+                    return `<div style="padding: 5px; background: ${bgColor}; border-radius: 8px; margin: 5px 0;">${i + 1}. ${word}${playerLabel}</div>`;
+                }).join('');
             }
         }
 
@@ -2189,8 +2195,11 @@
             
             const status = document.getElementById('wordChainStatus');
             
-            // Check if word already used
-            if (wordChainList.includes(word)) {
+            // Check if word already used (support both old and new format)
+            const usedWords = wordChainList.map(entry => 
+                typeof entry === 'string' ? entry : entry.word
+            );
+            if (usedWords.includes(word)) {
                 status.textContent = '❌ هذه الكلمة مستخدمة بالفعل!';
                 status.style.background = '#fee2e2';
                 status.style.color = '#991b1b';
@@ -2202,13 +2211,19 @@
             const isValid = currentWordTopic.words.some(w => word.includes(w) || w.includes(word));
             
             if (isValid) {
-                wordChainList.push(word);
+                // Add word with player attribution
+                const wordEntry = {
+                    word: word,
+                    player: gameState.playerName,
+                    timestamp: Date.now()
+                };
+                wordChainList.push(wordEntry);
                 gameState.score += 15;
                 
                 // Sync to Firebase immediately
                 if (isFirebaseReady && gameState.roomCode) {
                     database.ref(`rooms/${gameState.roomCode}/wordChain/words`).set(wordChainList);
-                    console.log('📝 Word added to chain:', word);
+                    console.log('📝 Word added to chain:', word, 'by', gameState.playerName);
                 }
                 
                 status.textContent = `✅ كلمة صحيحة! +15 نقطة`;
