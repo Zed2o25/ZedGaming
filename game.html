@@ -2114,17 +2114,62 @@
                 document.getElementById('nextWordChainBtn').classList.add('hidden');
             }
             
-            startWordChainRound();
+            // Host starts the round
+            if (gameState.isHost) {
+                startWordChainRound();
+            } else {
+                // Non-host: Listen for Firebase data
+                setupWordChainListener();
+            }
+        }
+
+        function setupWordChainListener() {
+            if (!isFirebaseReady || !gameState.roomCode) return;
+            
+            const wordChainRef = database.ref(`rooms/${gameState.roomCode}/wordChain`);
+            wordChainRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    currentWordTopic = data.topic;
+                    wordChainList = data.words || [];
+                    
+                    document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
+                    updateWordListDisplay();
+                    console.log('📝 Word Chain synced:', currentWordTopic.topic, wordChainList);
+                }
+            });
         }
 
         function startWordChainRound() {
-            currentWordTopic = wordChainTopics[Math.floor(Math.random() * wordChainTopics.length)];
+            const selectedTopic = wordChainTopics[Math.floor(Math.random() * wordChainTopics.length)];
+            currentWordTopic = selectedTopic;
             wordChainList = [];
+            
+            // Host: Sync to Firebase
+            if (isFirebaseReady && gameState.roomCode) {
+                database.ref(`rooms/${gameState.roomCode}/wordChain`).set({
+                    topic: currentWordTopic,
+                    words: [],
+                    timestamp: Date.now()
+                });
+                console.log('🎯 Host started Word Chain:', currentWordTopic.topic);
+            }
             
             document.getElementById('wordChainPrompt').textContent = `الموضوع: ${currentWordTopic.topic}`;
             document.getElementById('wordChainInput').value = '';
             document.getElementById('wordChainStatus').classList.add('hidden');
             document.getElementById('wordList').textContent = 'لا توجد كلمات بعد...';
+        }
+        
+        function updateWordListDisplay() {
+            const wordListEl = document.getElementById('wordList');
+            if (wordChainList.length === 0) {
+                wordListEl.textContent = 'لا توجد كلمات بعد...';
+            } else {
+                wordListEl.innerHTML = wordChainList.map((w, i) => 
+                    `<div style="padding: 5px; background: #e0e7ff; border-radius: 8px; margin: 5px 0;">${i + 1}. ${w}</div>`
+                ).join('');
+            }
         }
 
         function submitWord() {
@@ -2160,15 +2205,17 @@
                 wordChainList.push(word);
                 gameState.score += 15;
                 
+                // Sync to Firebase immediately
+                if (isFirebaseReady && gameState.roomCode) {
+                    database.ref(`rooms/${gameState.roomCode}/wordChain/words`).set(wordChainList);
+                    console.log('📝 Word added to chain:', word);
+                }
+                
                 status.textContent = `✅ كلمة صحيحة! +15 نقطة`;
                 status.style.background = '#dcfce7';
                 status.style.color = '#166534';
                 
-                // Update word list display
-                const wordListEl = document.getElementById('wordList');
-                wordListEl.innerHTML = wordChainList.map((w, i) => 
-                    `<div style="padding: 5px; background: #e0e7ff; border-radius: 8px; margin: 5px 0;">${i + 1}. ${w}</div>`
-                ).join('');
+                updateWordListDisplay();
             } else {
                 status.textContent = `❌ الكلمة لا تتطابق مع الموضوع "${currentWordTopic.topic}"`;
                 status.style.background = '#fee2e2';
