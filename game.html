@@ -2757,7 +2757,15 @@
                 
                 // Award points for this match only
                 gameState.score += 20;
-                updateScoreboard();
+                // Update local display only, don't sync to Firebase yet (prevents freezing)
+                const myScoreEl = document.getElementById('myScore');
+                if (myScoreEl) {
+                    if (gameState.isHost && gameState.hostIsModerator) {
+                        myScoreEl.textContent = '👁️ مراقب | Moderator';
+                    } else {
+                        myScoreEl.textContent = gameState.score;
+                    }
+                }
                 saveGameState();
                 
                 console.log(`✅ Match found! Total pairs: ${matchedPairs}/8, Score: ${gameState.score}`);
