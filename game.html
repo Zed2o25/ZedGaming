@@ -1049,6 +1049,13 @@
             saveGameState();
         }
         
+        function backFromRoleSelection() {
+            document.getElementById('roleSelectionScreen').classList.add('hidden');
+            document.getElementById('joinScreen').classList.remove('hidden');
+            gameState.currentScreen = 'joinScreen';
+            saveGameState();
+        }
+
         function showAvailableRooms() {
             const name = document.getElementById('playerName').value.trim();
             document.getElementById('browserPlayerName').value = name;
@@ -1573,6 +1580,11 @@
         function selectColor(colorName) {
             if (!colorGameActive) return;
             
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 return;
@@ -1727,6 +1739,11 @@
         function selectAnswer(index) {
             if (quizAnswered) return;
             
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 return;
@@ -1970,6 +1987,11 @@
         }
 
         function clickReaction() {
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 return;
@@ -2097,6 +2119,11 @@
         function selectTrueFalse(answer) {
             if (trueFalseAnswered) return;
             
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 return;
@@ -2315,6 +2342,11 @@
         }
 
         function submitWord() {
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 alert('👁️ أنت مراقب - لا يمكنك اللعب | You are a moderator - you cannot play');
@@ -2756,6 +2788,12 @@
             if (currentDrawerName === gameState.playerName) return;
             if (roundGuessed) return;
             
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - يمكنك المشاهدة فقط | You are an observer - you can only watch');
+                return;
+            }
+            
             const guessInput = document.getElementById('guessInput');
             const guess = guessInput.value.trim();
             
@@ -2913,6 +2951,11 @@
         }
 
         function flipMemoryCard(index) {
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are an observer - you cannot play');
+                return;
+            }
             // Moderator can't play
             if (gameState.isHost && gameState.hostIsModerator) {
                 return;
