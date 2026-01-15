@@ -444,6 +444,7 @@
                 <span id="roomCode">----</span>
             </div>
             <div class="player-count" id="playerCount">عدد اللاعبين: 1</div>
+            <div id="moderatorBadge" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 8px; display: inline-block;">👁️ مراقب | Moderator</div>
             <div id="connectionStatus" style="font-size: 12px; margin-top: 5px; color: #ef4444;">🔴 لم يتم الاتصال بالخادم</div>
         </div>
 
@@ -672,13 +673,19 @@
                     <span id="gameModeText">🎮 وضع عادي (يتحكم كل لاعب)</span>
                 </button>
             </div>
-            <div style="text-align: center; margin: 20px 0; color: #64748b;">خصوصية الغرفة</div>
+            <div style="text-align: center; margin: 20px 0; color: #64748b;">خصوصية الغرفة | Room Privacy</div>
             <div class="game-mode-select">
                 <button class="game-mode-btn" style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);" onclick="togglePrivateMode()">
                     <span id="privateModeText">🌐 غرفة عامة (تظهر في القائمة)</span>
                 </button>
             </div>
-            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 20px;">🚪 مغادرة الغرفة</button>
+            <div style="text-align: center; margin: 20px 0; color: #64748b;">دور المضيف | Host Role</div>
+            <div class="game-mode-select">
+                <button class="game-mode-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="toggleModeratorMode()">
+                    <span id="moderatorModeText">🎮 مضيف لاعب (تلعب وتتحكم) | Playing Host</span>
+                </button>
+            </div>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 20px;">🚪 مغادرة الغرفة | Leave Room</button>
         </div>
 
         <!-- Color Game -->
@@ -913,7 +920,8 @@
             round: 0,
             isHost: false,
             hostMode: false, // false = user-controlled, true = host-controlled
-            isPrivate: false // false = public (appears in browser), true = private (code required)
+            isPrivate: false, // false = public (appears in browser), true = private (code required)
+            hostIsModerator: false // false = host plays, true = host only moderates
         };
 
         // Simulate multiplayer with localStorage (for testing)
@@ -1163,9 +1171,10 @@
                     hostName: gameState.playerName,
                     hostMode: gameState.hostMode,
                     isPrivate: gameState.isPrivate,
+                    hostIsModerator: gameState.hostIsModerator,
                     timestamp: Date.now()
                 });
-                console.log('Room metadata saved to Firebase:', gameState.roomCode, '(Private:', gameState.isPrivate + ')');
+                console.log('Room metadata saved to Firebase:', gameState.roomCode, '(Private:', gameState.isPrivate, 'Moderator:', gameState.hostIsModerator + ')');
             }
             
             // Also save to localStorage for backward compatibility
@@ -1200,7 +1209,7 @@
         
         function togglePrivateMode() {
             if (!gameState.isHost) {
-                alert('فقط المضيف يمكنه تغيير خصوصية الغرفة');
+                alert('فقط المضيف يمكنه تغيير خصوصية الغرفة | Only host can change room privacy');
                 return;
             }
             
@@ -1208,6 +1217,35 @@
             updatePrivateModeDisplay();
             saveGameState();
             addRoomToList();
+        }
+
+        function toggleModeratorMode() {
+            if (!gameState.isHost) {
+                alert('فقط المضيف يمكنه تغيير دوره | Only host can change their role');
+                return;
+            }
+            
+            gameState.hostIsModerator = !gameState.hostIsModerator;
+            updateModeratorModeDisplay();
+            saveGameState();
+            addRoomToList();
+            
+            // Update badge visibility
+            const badge = document.getElementById('moderatorBadge');
+            if (badge) {
+                badge.style.display = gameState.hostIsModerator ? 'inline-block' : 'none';
+            }
+        }
+
+        function updateModeratorModeDisplay() {
+            const moderatorText = document.getElementById('moderatorModeText');
+            if (moderatorText) {
+                if (gameState.hostIsModerator) {
+                    moderatorText.textContent = '👁️ مضيف مراقب (تتحكم فقط) | Moderator Host';
+                } else {
+                    moderatorText.textContent = '🎮 مضيف لاعب (تلعب وتتحكم) | Playing Host';
+                }
+            }
         }
 
         function updateGameModeDisplay() {
@@ -1315,6 +1353,13 @@
                     
                     updateGameModeDisplay();
                     updatePrivateModeDisplay();
+                    updateModeratorModeDisplay();
+                    
+                    // Show moderator badge if applicable
+                    const badge = document.getElementById('moderatorBadge');
+                    if (badge && gameState.isHost && gameState.hostIsModerator) {
+                        badge.style.display = 'inline-block';
+                    }
                     
                     // Wait for Firebase to be ready before setting up listener
                     if (isFirebaseReady) {
@@ -1491,6 +1536,11 @@
         function selectColor(colorName) {
             if (!colorGameActive) return;
             
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                return;
+            }
+            
             colorGameActive = false;
             const status = document.getElementById('colorStatus');
             
@@ -1640,6 +1690,11 @@
         function selectAnswer(index) {
             if (quizAnswered) return;
             
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                return;
+            }
+            
             quizAnswered = true;
             const buttons = document.querySelectorAll('.answer-btn');
             const status = document.getElementById('quizStatus');
@@ -1743,6 +1798,12 @@
 
         function submitNumber() {
             if (numberSubmitted) return;
+            
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are a moderator - you cannot play');
+                return;
+            }
             
             numberSubmitted = true;
             
@@ -1872,6 +1933,11 @@
         }
 
         function clickReaction() {
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                return;
+            }
+            
             const box = document.getElementById('reactionBox');
             const timer = document.getElementById('reactionTimer');
             const status = document.getElementById('reactionStatus');
@@ -1994,6 +2060,11 @@
         function selectTrueFalse(answer) {
             if (trueFalseAnswered) return;
             
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                return;
+            }
+            
             trueFalseAnswered = true;
             const status = document.getElementById('trueFalseStatus');
             
@@ -2057,11 +2128,17 @@
         }
 
         function submitWord() {
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب | You are a moderator - you cannot play');
+                return;
+            }
+            
             const input = document.getElementById('wordChainInput');
             const word = input.value.trim();
             
             if (!word) {
-                alert('الرجاء كتابة كلمة');
+                alert('الرجاء كتابة كلمة | Please write a word');
                 return;
             }
             
@@ -2156,6 +2233,13 @@
                         const player = child.val();
                         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
                         if (player.timestamp > fiveMinutesAgo) {
+                            // Exclude moderator from drawing rotation
+                            if (player.name === gameState.playerName && 
+                                gameState.isHost && 
+                                gameState.hostIsModerator) {
+                                console.log('👁️ Excluding moderator from drawing rotation');
+                                return; // Skip moderator
+                            }
                             drawingPlayers.push(player.name);
                         }
                     });
@@ -2631,6 +2715,11 @@
         }
 
         function flipMemoryCard(index) {
+            // Moderator can't play
+            if (gameState.isHost && gameState.hostIsModerator) {
+                return;
+            }
+            
             const card = memoryCards[index];
             if (card.matched || card.flipped || memoryFlipped.length >= 2) return;
             
@@ -2765,12 +2854,19 @@
         function updateRoomScores() {
             if (!gameState.roomCode) return;
             
+            // Skip if moderator (they don't play/score)
+            if (gameState.isHost && gameState.hostIsModerator) {
+                console.log('👁️ Moderator - skipping score update');
+                return;
+            }
+            
             if (isFirebaseReady) {
                 // Use Firebase for real-time sync
                 const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
                 playerRef.set({
                     name: gameState.playerName,
                     score: gameState.score,
+                    isModerator: false,
                     timestamp: Date.now()
                 });
                 console.log(`Firebase: Updated ${gameState.playerName} score to ${gameState.score}`);
@@ -2940,8 +3036,12 @@
                 return;
             }
             
-            // Update my score display
-            myScoreEl.textContent = gameState.score;
+            // Update my score display (or show moderator status)
+            if (gameState.isHost && gameState.hostIsModerator) {
+                myScoreEl.textContent = '👁️ مراقب | Moderator';
+            } else {
+                myScoreEl.textContent = gameState.score;
+            }
             
             console.log('📊 Updating scoreboard with players:', players.map(p => `${p.name}(${p.score})`));
             
