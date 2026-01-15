@@ -2752,8 +2752,11 @@
                 cardEl2.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
                 
                 const matchedPairs = memoryMatched.length / 2;
-                document.getElementById('matchCount').textContent = matchedPairs;
-                document.getElementById('memoryStatus').textContent = `أزواج متطابقة: ${matchedPairs} / 8 | Matched pairs: ${matchedPairs} / 8`;
+                const matchCountEl = document.getElementById('matchCount');
+                const memoryStatusEl = document.getElementById('memoryStatus');
+                
+                if (matchCountEl) matchCountEl.textContent = matchedPairs;
+                if (memoryStatusEl) memoryStatusEl.textContent = `أزواج متطابقة: ${matchedPairs} / 8 | Matched pairs: ${matchedPairs} / 8`;
                 
                 // Award points for this match only
                 gameState.score += 20;
@@ -2804,10 +2807,13 @@
                 gameState.score += bonus;
                 memoryBonusAwarded = true;
                 
-                document.getElementById('memoryStatus').textContent = 
-                    `🎉 أكملت اللعبة! مكافأة السرعة: +${bonus} نقطة | Game complete! Speed bonus: +${bonus} points`;
-                document.getElementById('memoryStatus').style.background = '#dcfce7';
-                document.getElementById('memoryStatus').style.color = '#166534';
+                const memoryStatusEl = document.getElementById('memoryStatus');
+                if (memoryStatusEl) {
+                    memoryStatusEl.textContent = 
+                        `🎉 أكملت اللعبة! مكافأة السرعة: +${bonus} نقطة | Game complete! Speed bonus: +${bonus} points`;
+                    memoryStatusEl.style.background = '#dcfce7';
+                    memoryStatusEl.style.color = '#166534';
+                }
                 
                 updateScoreboard();
                 saveGameState();
