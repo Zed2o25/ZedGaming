@@ -2164,16 +2164,28 @@
                     
                     if (drawingPlayers.length > 0) {
                         if (gameState.isHost) {
+                            // Host starts the first round immediately
+                            console.log('👑 Host starting first drawing round...');
                             startDrawingRound();
+                        } else {
+                            // Non-host waits for host to start
+                            console.log('⏳ Waiting for host to start the game...');
+                            document.getElementById('drawingTurnInfo').textContent = '⏳ في انتظار المضيف لبدء اللعبة... | Waiting for host to start...';
+                            document.getElementById('drawingTurnInfo').style.background = '#dbeafe';
+                            document.getElementById('drawingTurnInfo').style.color = '#1e40af';
                         }
                     } else {
-                        document.getElementById('drawingTurnInfo').textContent = '⚠️ لا يوجد لاعبون';
+                        document.getElementById('drawingTurnInfo').textContent = '⚠️ لا يوجد لاعبون | No players found';
+                        document.getElementById('drawingTurnInfo').style.background = '#fee2e2';
+                        document.getElementById('drawingTurnInfo').style.color = '#991b1b';
                     }
                 });
             } else {
                 // Fallback to localStorage
                 drawingPlayers = [gameState.playerName];
-                startDrawingRound();
+                if (gameState.isHost) {
+                    startDrawingRound();
+                }
             }
         }
 
@@ -2277,13 +2289,19 @@
             const drawingTools = document.getElementById('drawingTools');
             const guessingArea = document.getElementById('guessingArea');
             
+            // Check if game has started
+            if (!currentDrawerName || !currentDrawingWord) {
+                console.log('⏳ Drawing game not started yet, waiting for host...');
+                return;
+            }
+            
             if (isMyTurn) {
                 // I'm drawing
-                turnInfo.textContent = `🎯 دورك للرسم!`;
+                turnInfo.textContent = `🎯 دورك للرسم! | Your turn to draw!`;
                 turnInfo.style.background = '#dcfce7';
                 turnInfo.style.color = '#166534';
                 
-                wordDisplay.textContent = `ارسم: ${currentDrawingWord}`;
+                wordDisplay.textContent = `ارسم: ${currentDrawingWord} | Draw: ${currentDrawingWord}`;
                 wordDisplay.style.display = 'block';
                 
                 drawingTools.style.display = 'block';
@@ -2293,7 +2311,7 @@
                 enableDrawing();
             } else {
                 // I'm guessing
-                turnInfo.textContent = `🔍 ${currentDrawerName} يرسم الآن... خمّن!`;
+                turnInfo.textContent = `🔍 ${currentDrawerName} يرسم الآن... خمّن! | ${currentDrawerName} is drawing... guess!`;
                 turnInfo.style.background = '#dbeafe';
                 turnInfo.style.color = '#1e40af';
                 
