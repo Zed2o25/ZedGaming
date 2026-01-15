@@ -937,7 +937,8 @@
             isHost: false,
             hostMode: false, // false = user-controlled, true = host-controlled
             isPrivate: false, // false = public (appears in browser), true = private (code required)
-            hostIsModerator: false // false = host plays, true = host only moderates
+            hostIsModerator: false, // false = host plays, true = host only moderates
+            role: 'player' // 'player' or 'observer'
         };
 
         // Simulate multiplayer with localStorage (for testing)
@@ -960,11 +961,11 @@
             gameState.isHost = true;
             gameState.hostMode = false;
             gameState.isPrivate = false;
-            gameState.currentScreen = 'gameModeScreen';
+            gameState.currentScreen = 'roleSelectionScreen';
             
             document.getElementById('roomCode').textContent = gameState.roomCode;
             document.getElementById('joinScreen').classList.add('hidden');
-            document.getElementById('gameModeScreen').classList.remove('hidden');
+            document.getElementById('roleSelectionScreen').classList.remove('hidden');
             
             updatePlayerCount();
             updateRoomScores(); // Save player to room immediately
@@ -1181,6 +1182,7 @@
             gameState.score = 0;
             gameState.isHost = false;
             gameState.hostMode = false; // Will sync from Firebase
+            gameState.role = 'player'; // Default role
             gameState.currentScreen = 'roleSelectionScreen';
             
             document.getElementById('roomCode').textContent = code;
