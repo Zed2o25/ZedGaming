@@ -339,6 +339,17 @@
             50% { transform: scale(1.1); }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .hidden {
             display: none;
         }
@@ -753,10 +764,10 @@
 
         <!-- Drawing Game -->
         <div class="game-area hidden" id="drawingGame">
-            <h3 style="text-align: center; color: #6366f1; margin-bottom: 10px;">🎨 لعبة الرسم والتخمين</h3>
-            <div class="status-message" id="drawingTurnInfo" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">جاري التحميل...</div>
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 10px;">🎨 لعبة الرسم والتخمين | Drawing & Guessing</h3>
+            <div class="status-message" id="drawingTurnInfo" style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">جاري التحميل... | Loading...</div>
             <div class="status-message" id="drawingWord" style="font-size: 24px; font-weight: bold; margin-bottom: 10px; display: none;">...</div>
-            <canvas id="drawingCanvas" style="width: 100%; height: 280px; background: white; border-radius: 15px; border: 3px solid #6366f1; cursor: crosshair; touch-action: none;"></canvas>
+            <canvas id="drawingCanvas" style="width: 100%; height: 250px; background: white; border-radius: 15px; border: 3px solid #6366f1; cursor: crosshair; touch-action: none;"></canvas>
             
             <!-- Drawing Tools (only for current drawer) -->
             <div id="drawingTools" style="display: none;">
@@ -768,24 +779,29 @@
                 </div>
             </div>
             
+            <!-- Chat/Guesses Feed (visible to all players) -->
+            <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; margin: 10px 0; max-height: 150px; overflow-y: auto;" id="drawingChatFeed">
+                <div style="font-size: 12px; color: #64748b; text-align: center; padding: 10px;" id="chatPlaceholder">💬 التخمينات ستظهر هنا | Guesses will appear here</div>
+            </div>
+            
             <!-- Guessing Input (only for non-drawers) -->
-            <div id="guessingArea" style="display: none; margin: 15px 0;">
-                <input type="text" class="name-input" id="guessInput" placeholder="خمّن ما الرسمة..." style="font-size: 20px;">
-                <button class="submit-btn" onclick="submitGuess()" style="margin-top: 10px;">خمّن!</button>
+            <div id="guessingArea" style="display: none; margin: 10px 0;">
+                <input type="text" class="name-input" id="guessInput" placeholder="خمّن ما الرسمة... | Guess the drawing..." style="font-size: 18px;">
+                <button class="submit-btn" onclick="submitGuess()" style="margin-top: 10px;">خمّن! | Guess!</button>
             </div>
             
             <div class="status-message hidden" id="drawingStatus"></div>
             
             <!-- Host Controls -->
-            <div id="hostDrawingControls" style="display: none; margin-top: 15px;">
+            <div id="hostDrawingControls" style="display: none; margin-top: 10px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <button class="submit-btn" onclick="hostEraseDrawing()" style="background: #f59e0b;">🗑️ مسح اللوحة</button>
-                    <button class="submit-btn" onclick="hostNextDrawing()" style="background: #6366f1;">➡️ الدور التالي</button>
+                    <button class="submit-btn" onclick="hostEraseDrawing()" style="background: #f59e0b;">🗑️ مسح اللوحة | Erase</button>
+                    <button class="submit-btn" onclick="hostNextDrawing()" style="background: #6366f1;">➡️ الدور التالي | Next Turn</button>
                 </div>
             </div>
             
-            <button class="game-mode-btn back-btn" onclick="backToMenu()" style="margin-top: 15px;">عودة للقائمة</button>
-            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()" style="margin-top: 10px;">عودة للقائمة | Back to Menu</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة | Leave Room</button>
         </div>
 
         <!-- Memory Match Game -->
@@ -795,8 +811,8 @@
             <div id="memoryGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;">
                 <!-- Cards will be generated here -->
             </div>
-            <div class="status-message" id="memoryStatus">أزواج متطابقة: <span id="matchCount">0</span> / 8</div>
-            <button class="game-mode-btn submit-btn hidden" id="nextMemoryBtn" onclick="hostNextMemory()">لعبة جديدة</button>
+            <div class="status-message" id="memoryStatus">أزواج متطابقة: <span id="matchCount">0</span> / 8 | Matched pairs: <span id="matchCount">0</span> / 8</div>
+            <button class="game-mode-btn submit-btn hidden" id="nextMemoryBtn" onclick="hostNextMemory()">لعبة جديدة | New Game</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
         </div>
@@ -1405,6 +1421,9 @@
                 
                 const clearRef = database.ref(`rooms/${gameState.roomCode}/clearCanvas`);
                 clearRef.off();
+                
+                const guessesRef = database.ref(`rooms/${gameState.roomCode}/drawingGuesses`);
+                guessesRef.off();
             }
             
             gameState.currentGame = null;
@@ -2201,6 +2220,13 @@
                     clearCanvas();
                 }
             });
+            
+            // Listen for chat/guesses - REAL-TIME CHAT FEED
+            const guessesRef = database.ref(`rooms/${gameState.roomCode}/drawingGuesses`);
+            guessesRef.on('child_added', (snapshot) => {
+                const guessData = snapshot.val();
+                displayGuessInChat(guessData);
+            });
         }
 
         function startDrawingRound() {
@@ -2220,6 +2246,12 @@
             }
             clearCanvas();
             
+            // Clear chat feed for new round
+            const chatFeed = document.getElementById('drawingChatFeed');
+            if (chatFeed) {
+                chatFeed.innerHTML = '<div style="font-size: 12px; color: #64748b; text-align: center; padding: 10px;" id="chatPlaceholder">💬 التخمينات ستظهر هنا | Guesses will appear here</div>';
+            }
+            
             // Broadcast drawing state
             if (isFirebaseReady) {
                 const drawingStateRef = database.ref(`rooms/${gameState.roomCode}/drawingState`);
@@ -2230,8 +2262,9 @@
                     timestamp: Date.now()
                 });
                 
-                // Clear old strokes
+                // Clear old strokes and guesses
                 database.ref(`rooms/${gameState.roomCode}/drawingStrokes`).remove();
+                database.ref(`rooms/${gameState.roomCode}/drawingGuesses`).remove();
             }
             
             document.getElementById('drawingStatus').classList.add('hidden');
@@ -2378,6 +2411,47 @@
             }
         }
 
+        function displayGuessInChat(guessData) {
+            const chatFeed = document.getElementById('drawingChatFeed');
+            const placeholder = document.getElementById('chatPlaceholder');
+            
+            // Remove placeholder on first message
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Create chat message element
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                padding: 8px 12px;
+                margin: 5px 0;
+                border-radius: 8px;
+                font-size: 14px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            // Style based on whether it's correct or not
+            if (guessData.isCorrect) {
+                messageEl.style.background = 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)';
+                messageEl.style.border = '2px solid #22c55e';
+                messageEl.innerHTML = `<strong>🎉 ${guessData.playerName}:</strong> ${guessData.guess} <span style="color: #16a34a;">✓ صحيح! | Correct!</span>`;
+            } else {
+                messageEl.style.background = '#f1f5f9';
+                messageEl.style.border = '1px solid #cbd5e1';
+                messageEl.innerHTML = `<strong>${guessData.playerName}:</strong> ${guessData.guess}`;
+            }
+            
+            chatFeed.appendChild(messageEl);
+            
+            // Auto-scroll to bottom
+            chatFeed.scrollTop = chatFeed.scrollHeight;
+            
+            // Limit to last 20 messages to prevent overflow
+            while (chatFeed.children.length > 20) {
+                chatFeed.removeChild(chatFeed.firstChild);
+            }
+        }
+
         function submitGuess() {
             if (currentDrawerName === gameState.playerName) return;
             if (roundGuessed) return;
@@ -2386,14 +2460,28 @@
             const guess = guessInput.value.trim();
             
             if (!guess) {
-                alert('الرجاء كتابة تخمينك');
+                alert('الرجاء كتابة تخمينك | Please write your guess');
                 return;
             }
+            
+            // Clear input immediately for better UX
+            guessInput.value = '';
             
             // Check if guess is correct
             const isCorrect = guess === currentDrawingWord || 
                             guess.includes(currentDrawingWord) || 
                             currentDrawingWord.includes(guess);
+            
+            // Broadcast guess to chat for ALL players to see
+            if (isFirebaseReady) {
+                const guessesRef = database.ref(`rooms/${gameState.roomCode}/drawingGuesses`);
+                guessesRef.push({
+                    playerName: gameState.playerName,
+                    guess: guess,
+                    isCorrect: isCorrect,
+                    timestamp: Date.now()
+                });
+            }
             
             const status = document.getElementById('drawingStatus');
             
@@ -2402,7 +2490,7 @@
                 gameState.score += 40;
                 roundGuessed = true;
                 
-                status.textContent = `🎉 صحيح! الإجابة: ${currentDrawingWord} - +40 نقطة`;
+                status.textContent = `🎉 صحيح! الإجابة: ${currentDrawingWord} - +40 نقطة | Correct! Answer: ${currentDrawingWord} - +40 points`;
                 status.style.background = '#dcfce7';
                 status.style.color = '#166534';
                 status.classList.remove('hidden');
@@ -2419,17 +2507,6 @@
                 saveGameState();
                 
                 console.log(`✅ ${gameState.playerName} guessed correctly!`);
-            } else {
-                status.textContent = '❌ حاول مرة أخرى!';
-                status.style.background = '#fee2e2';
-                status.style.color = '#991b1b';
-                status.classList.remove('hidden');
-                
-                guessInput.value = '';
-                
-                setTimeout(() => {
-                    status.classList.add('hidden');
-                }, 2000);
             }
         }
 
@@ -2463,6 +2540,8 @@
         let memoryMatched = [];
         let memoryStartTime = 0;
         let memoryTimerInterval = null;
+        let memoryGameComplete = false;
+        let memoryBonusAwarded = false;
 
         function startMemoryGame() {
             gameState.round++;
@@ -2477,6 +2556,10 @@
         }
 
         function startMemoryRound() {
+            // Reset game state
+            memoryGameComplete = false;
+            memoryBonusAwarded = false;
+            
             // Create pairs of cards
             memoryCards = [...memoryEmojis, ...memoryEmojis]
                 .sort(() => Math.random() - 0.5)
@@ -2488,6 +2571,9 @@
             
             // Update display
             document.getElementById('matchCount').textContent = '0';
+            document.getElementById('memoryStatus').textContent = 'أزواج متطابقة: 0 / 8 | Matched pairs: 0 / 8';
+            document.getElementById('memoryStatus').style.background = '#f0f9ff';
+            document.getElementById('memoryStatus').style.color = '#0369a1';
             
             // Generate grid
             const grid = document.getElementById('memoryGrid');
@@ -2514,6 +2600,8 @@
             // Start timer
             if (memoryTimerInterval) clearInterval(memoryTimerInterval);
             memoryTimerInterval = setInterval(updateMemoryTimer, 1000);
+            
+            console.log('🧩 Memory game round started');
         }
 
         function updateMemoryTimer() {
@@ -2556,31 +2644,21 @@
                 cardEl1.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
                 cardEl2.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
                 
-                document.getElementById('matchCount').textContent = memoryMatched.length / 2;
+                const matchedPairs = memoryMatched.length / 2;
+                document.getElementById('matchCount').textContent = matchedPairs;
+                document.getElementById('memoryStatus').textContent = `أزواج متطابقة: ${matchedPairs} / 8 | Matched pairs: ${matchedPairs} / 8`;
                 
-                // Award points
+                // Award points for this match only
                 gameState.score += 20;
                 updateScoreboard();
                 saveGameState();
                 
+                console.log(`✅ Match found! Total pairs: ${matchedPairs}/8, Score: ${gameState.score}`);
+                
                 // Check if game complete
-                if (memoryMatched.length === memoryCards.length) {
-                    clearInterval(memoryTimerInterval);
-                    const elapsed = Math.floor((Date.now() - memoryStartTime) / 1000);
-                    const bonus = Math.max(0, 100 - elapsed * 2);
-                    gameState.score += bonus;
-                    
-                    document.getElementById('memoryStatus').textContent = 
-                        `🎉 أكملت اللعبة! مكافأة السرعة: +${bonus} نقطة`;
-                    document.getElementById('memoryStatus').style.background = '#dcfce7';
-                    document.getElementById('memoryStatus').style.color = '#166534';
-                    
-                    updateScoreboard();
-                    saveGameState();
-                    
-                    if (!gameState.hostMode) {
-                        setTimeout(startMemoryRound, 4000);
-                    }
+                if (memoryMatched.length === memoryCards.length && !memoryGameComplete) {
+                    memoryGameComplete = true;
+                    completeMemoryGame();
                 }
             } else {
                 // No match - flip back
@@ -2598,6 +2676,36 @@
             }
             
             memoryFlipped = [];
+        }
+
+        function completeMemoryGame() {
+            clearInterval(memoryTimerInterval);
+            
+            // Calculate speed bonus only if not already awarded
+            if (!memoryBonusAwarded) {
+                const elapsed = Math.floor((Date.now() - memoryStartTime) / 1000);
+                const bonus = Math.max(0, 100 - elapsed * 2);
+                
+                gameState.score += bonus;
+                memoryBonusAwarded = true;
+                
+                document.getElementById('memoryStatus').textContent = 
+                    `🎉 أكملت اللعبة! مكافأة السرعة: +${bonus} نقطة | Game complete! Speed bonus: +${bonus} points`;
+                document.getElementById('memoryStatus').style.background = '#dcfce7';
+                document.getElementById('memoryStatus').style.color = '#166534';
+                
+                updateScoreboard();
+                saveGameState();
+                
+                console.log(`🎉 Memory game complete! Time: ${elapsed}s, Bonus: ${bonus}, Total score: ${gameState.score}`);
+                
+                // Auto-restart in normal mode
+                if (!gameState.hostMode) {
+                    setTimeout(() => {
+                        startMemoryRound();
+                    }, 4000);
+                }
+            }
         }
 
         function hostNextMemory() {
