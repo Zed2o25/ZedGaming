@@ -463,6 +463,12 @@
             transform: scale(0.95);
         }
 
+        .chat-toggle-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
+        }
+
         .chat-badge {
             position: absolute;
             top: -5px;
@@ -3413,9 +3419,11 @@
             chatOpen = !chatOpen;
             const panel = document.getElementById('chatPanel');
             const badge = document.getElementById('chatBadge');
+            const toggleBtn = document.getElementById('chatToggleBtn');
             
             if (chatOpen) {
                 panel.classList.add('open');
+                toggleBtn.classList.add('hidden'); // Hide button when chat opens
                 unreadMessages = 0;
                 badge.classList.add('hidden');
                 lastChatCheck = Date.now();
@@ -3432,6 +3440,7 @@
                 }
             } else {
                 panel.classList.remove('open');
+                toggleBtn.classList.remove('hidden'); // Show button when chat closes
             }
         }
         
