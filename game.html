@@ -681,6 +681,173 @@
                 height: 60vh;
             }
         }
+
+        /* Game Categories */
+        .game-category {
+            margin-bottom: 20px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .category-header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .category-header:active {
+            transform: scale(0.98);
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-arrow {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .category-header.open .category-arrow {
+            transform: rotate(180deg);
+        }
+
+        .category-games {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .category-games.open {
+            max-height: 1000px;
+            padding-top: 15px;
+        }
+
+        .game-category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Board Game Styles */
+        .board-game-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .game-board {
+            display: inline-block;
+            margin: 20px auto;
+        }
+
+        .xo-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+            background: #6366f1;
+            padding: 5px;
+            border-radius: 15px;
+        }
+
+        .xo-cell {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .xo-cell:hover:not(:disabled) {
+            background: #f0f9ff;
+            transform: scale(1.05);
+        }
+
+        .xo-cell:disabled {
+            cursor: not-allowed;
+        }
+
+        .connect-four-board {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 20px;
+        }
+
+        .connect-four-cell {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .connect-four-cell:hover {
+            background: #f0f9ff;
+            transform: scale(1.1);
+        }
+
+        .turn-indicator {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6366f1;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .xo-cell {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+
+            .xo-board {
+                grid-template-columns: repeat(3, 80px);
+            }
+
+            .connect-four-board {
+                grid-template-columns: repeat(7, 45px);
+                grid-template-rows: repeat(6, 45px);
+                gap: 5px;
+            }
+
+            .connect-four-cell {
+                width: 45px;
+                height: 45px;
+                font-size: 30px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -900,32 +1067,127 @@
         <!-- Game Mode Selection -->
         <div class="game-area hidden" id="gameModeScreen">
             <h2 style="text-align: center; color: #6366f1; margin-bottom: 20px;">اختر اللعبة</h2>
-            <div class="game-mode-select">
-                <button class="game-mode-btn color-game-btn" onclick="startGame('color')">
-                    🎨 لعبة الألوان السريعة
-                </button>
-                <button class="game-mode-btn quiz-game-btn" onclick="startGame('quiz')">
-                    🧠 سؤال وجواب
-                </button>
-                <button class="game-mode-btn number-game-btn" onclick="startGame('number')">
-                    🔢 خمن الرقم
-                </button>
-                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);" onclick="startGame('reaction')">
-                    ⚡ لعبة سرعة البديهة
-                </button>
-                <button class="game-mode-btn" style="background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);" onclick="startGame('trueFalse')">
-                    ✅ صح أم خطأ
-                </button>
-                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ee5a6f 0%, #f29263 100%);" onclick="startGame('wordChain')">
-                    🔤 سلسلة الكلمات
-                </button>
-                <button class="game-mode-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="startGame('drawing')">
-                    🎨 لعبة الرسم
-                </button>
-                <button class="game-mode-btn" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);" onclick="startGame('memory')">
-                    🧩 تطابق الذاكرة
-                </button>
+            
+            <!-- Category 1: Mind Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('mindGames')">
+                    <div class="category-title">
+                        <span>🧠</span>
+                        <span>ألعاب العقل | Mind Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="mindGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="startGame('color')">
+                            🎨 لعبة الألوان السريعة
+                        </button>
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);" onclick="startGame('reaction')">
+                            ⚡ لعبة سرعة البديهة
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            <!-- Category 2: Knowledge Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('knowledgeGames')">
+                    <div class="category-title">
+                        <span>📚</span>
+                        <span>ألعاب المعرفة | Knowledge Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="knowledgeGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" onclick="startGame('quiz')">
+                            🧠 سؤال وجواب
+                        </button>
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #48dbfb 0%, #0abde3 100%);" onclick="startGame('trueFalse')">
+                            ✅ صح أم خطأ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3: Board Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('boardGames')">
+                    <div class="category-title">
+                        <span>🎲</span>
+                        <span>ألعاب اللوحة | Board Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="boardGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #fa8bff 0%, #2bd2ff 100%);" onclick="startGame('xo')">
+                            ❌⭕ إكس أو | Tic-Tac-Toe
+                        </button>
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="startGame('connectFour')">
+                            🔴🟡 أربعة متتالية | Connect Four
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 4: Creative Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('creativeGames')">
+                    <div class="category-title">
+                        <span>🎨</span>
+                        <span>ألعاب الإبداع | Creative Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="creativeGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="startGame('drawing')">
+                            🎨 لعبة الرسم
+                        </button>
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #ee5a6f 0%, #f29263 100%);" onclick="startGame('wordChain')">
+                            🔤 سلسلة الكلمات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 5: Guessing Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('guessingGames')">
+                    <div class="category-title">
+                        <span>🎯</span>
+                        <span>ألعاب التخمين | Guessing Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="guessingGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" onclick="startGame('number')">
+                            🔢 خمن الرقم
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 6: Puzzle Games -->
+            <div class="game-category">
+                <div class="category-header" onclick="toggleCategory('puzzleGames')">
+                    <div class="category-title">
+                        <span>🧩</span>
+                        <span>ألعاب الألغاز | Puzzle Games</span>
+                    </div>
+                    <span class="category-arrow">▼</span>
+                </div>
+                <div class="category-games" id="puzzleGames">
+                    <div class="game-category-list">
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);" onclick="startGame('memory')">
+                            🧩 تطابق الذاكرة
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div style="text-align: center; margin: 20px 0; color: #14b8a6; font-weight: 600; font-size: 1.1em;">معلومات ومساعدة</div>
             <div class="game-mode-select">
                 <button class="game-mode-btn" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="showHowToPlay()">
@@ -1087,6 +1349,40 @@
             <button class="game-mode-btn submit-btn hidden" id="nextMemoryBtn" onclick="hostNextMemory()">لعبة جديدة | New Game</button>
             <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
             <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+
+        <!-- XO (Tic-Tac-Toe) Game -->
+        <div class="game-area hidden" id="xoGame">
+            <div class="board-game-container">
+                <h3 style="color: #6366f1; margin-bottom: 15px;">❌⭕ إكس أو | Tic-Tac-Toe</h3>
+                <div class="turn-indicator" id="xoTurnInfo">في انتظار اللاعبين... | Waiting for players...</div>
+                <div class="game-board">
+                    <div class="xo-board" id="xoBoard">
+                        <!-- 3x3 grid will be generated here -->
+                    </div>
+                </div>
+                <div class="status-message hidden" id="xoStatus"></div>
+                <button class="submit-btn" onclick="resetXO()" style="margin-top: 15px;">🔄 لعب مرة أخرى | Play Again</button>
+                <button class="game-mode-btn back-btn" onclick="backToMenu()" style="margin-top: 10px;">عودة للقائمة</button>
+                <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+            </div>
+        </div>
+
+        <!-- Connect Four Game -->
+        <div class="game-area hidden" id="connectFourGame">
+            <div class="board-game-container">
+                <h3 style="color: #6366f1; margin-bottom: 15px;">🔴🟡 أربعة متتالية | Connect Four</h3>
+                <div class="turn-indicator" id="connectFourTurnInfo">في انتظار اللاعبين... | Waiting for players...</div>
+                <div class="game-board">
+                    <div class="connect-four-board" id="connectFourBoard">
+                        <!-- 7x6 grid will be generated here -->
+                    </div>
+                </div>
+                <div class="status-message hidden" id="connectFourStatus"></div>
+                <button class="submit-btn" onclick="resetConnectFour()" style="margin-top: 15px;">🔄 لعب مرة أخرى | Play Again</button>
+                <button class="game-mode-btn back-btn" onclick="backToMenu()" style="margin-top: 10px;">عودة للقائمة</button>
+                <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+            </div>
         </div>
 
         <!-- Scoreboard -->
@@ -1777,9 +2073,30 @@
                 gameState.currentScreen = 'memoryGame';
                 document.getElementById('memoryGame').classList.remove('hidden');
                 startMemoryGame();
+            } else if (type === 'xo') {
+                gameState.currentScreen = 'xoGame';
+                document.getElementById('xoGame').classList.remove('hidden');
+                startXOGame();
+            } else if (type === 'connectFour') {
+                gameState.currentScreen = 'connectFourGame';
+                document.getElementById('connectFourGame').classList.remove('hidden');
+                startConnectFourGame();
             }
             
             saveGameState();
+        }
+
+        function toggleCategory(categoryId) {
+            const categoryGames = document.getElementById(categoryId);
+            const header = categoryGames.previousElementSibling;
+            
+            if (categoryGames.classList.contains('open')) {
+                categoryGames.classList.remove('open');
+                header.classList.remove('open');
+            } else {
+                categoryGames.classList.add('open');
+                header.classList.add('open');
+            }
         }
 
         function backToMenu() {
@@ -3414,6 +3731,489 @@
         let lastChatCheck = Date.now();
         let chatListener = null;
         const quickEmojis = ['😊', '😂', '👍', '❤️', '🎮', '🔥', '👏', '🎉'];
+
+        // ============================================
+        // XO (TIC-TAC-TOE) GAME
+        // ============================================
+        
+        let xoBoard = Array(9).fill(null);
+        let xoCurrentPlayer = 'X';
+        let xoPlayers = { X: null, O: null };
+        let xoGameOver = false;
+        let xoMySymbol = null;
+        
+        function startXOGame() {
+            gameState.round++;
+            xoGameOver = false;
+            
+            // Initialize board
+            const boardEl = document.getElementById('xoBoard');
+            boardEl.innerHTML = '';
+            xoBoard = Array(9).fill(null);
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'xo-cell';
+                cell.onclick = () => makeXOMove(i);
+                boardEl.appendChild(cell);
+            }
+            
+            // Assign players
+            if (isFirebaseReady && gameState.roomCode) {
+                const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
+                roomRef.once('value', (snapshot) => {
+                    const players = [];
+                    snapshot.forEach((child) => {
+                        const player = child.val();
+                        if (player.role === 'player' || !player.role) {
+                            players.push(player.name);
+                        }
+                    });
+                    
+                    if (players.length >= 2) {
+                        // First two players
+                        xoPlayers.X = players[0];
+                        xoPlayers.O = players[1];
+                        
+                        // Determine my symbol
+                        if (gameState.playerName === xoPlayers.X) {
+                            xoMySymbol = 'X';
+                        } else if (gameState.playerName === xoPlayers.O) {
+                            xoMySymbol = 'O';
+                        } else {
+                            xoMySymbol = null; // Spectator
+                        }
+                        
+                        updateXOTurnInfo();
+                        
+                        // Setup Firebase listener
+                        setupXOListener();
+                        
+                        // Host initializes game state
+                        if (gameState.isHost) {
+                            database.ref(`rooms/${gameState.roomCode}/xoState`).set({
+                                board: xoBoard,
+                                currentPlayer: 'X',
+                                gameOver: false,
+                                players: xoPlayers,
+                                timestamp: Date.now()
+                            });
+                        }
+                    } else {
+                        document.getElementById('xoTurnInfo').textContent = '⚠️ يلزم لاعبان على الأقل | Need at least 2 players';
+                    }
+                });
+            } else {
+                // Local mode
+                xoPlayers.X = gameState.playerName;
+                xoPlayers.O = 'Computer';
+                xoMySymbol = 'X';
+                updateXOTurnInfo();
+            }
+        }
+        
+        function setupXOListener() {
+            if (!isFirebaseReady || !gameState.roomCode) return;
+            
+            const xoStateRef = database.ref(`rooms/${gameState.roomCode}/xoState`);
+            xoStateRef.on('value', (snapshot) => {
+                const state = snapshot.val();
+                if (state) {
+                    xoBoard = state.board;
+                    xoCurrentPlayer = state.currentPlayer;
+                    xoGameOver = state.gameOver;
+                    xoPlayers = state.players;
+                    
+                    updateXOBoard();
+                    updateXOTurnInfo();
+                }
+            });
+        }
+        
+        function makeXOMove(index) {
+            if (xoBoard[index] !== null || xoGameOver) return;
+            
+            // Check if it's my turn
+            if (xoMySymbol !== xoCurrentPlayer) {
+                alert('ليس دورك! | Not your turn!');
+                return;
+            }
+            
+            // Observer can't play
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب');
+                return;
+            }
+            
+            xoBoard[index] = xoCurrentPlayer;
+            
+            // Update Firebase
+            if (isFirebaseReady && gameState.roomCode) {
+                const xoStateRef = database.ref(`rooms/${gameState.roomCode}/xoState`);
+                xoStateRef.update({
+                    board: xoBoard,
+                    currentPlayer: xoCurrentPlayer === 'X' ? 'O' : 'X',
+                    timestamp: Date.now()
+                });
+            } else {
+                updateXOBoard();
+            }
+            
+            // Check for winner
+            const winner = checkXOWinner();
+            if (winner) {
+                xoGameOver = true;
+                const winnerName = xoPlayers[winner];
+                const status = document.getElementById('xoStatus');
+                
+                if (winnerName === gameState.playerName) {
+                    status.textContent = `🎉 فزت! | You won!`;
+                    gameState.score += 30;
+                } else {
+                    status.textContent = `🏆 ${winnerName} فاز! | ${winnerName} won!`;
+                }
+                
+                status.style.background = '#dcfce7';
+                status.style.color = '#166534';
+                status.classList.remove('hidden');
+                
+                updateScoreboard();
+                
+                // Update Firebase
+                if (isFirebaseReady && gameState.roomCode) {
+                    database.ref(`rooms/${gameState.roomCode}/xoState/gameOver`).set(true);
+                }
+            } else if (xoBoard.every(cell => cell !== null)) {
+                // Draw
+                xoGameOver = true;
+                const status = document.getElementById('xoStatus');
+                status.textContent = '🤝 تعادل! | Draw!';
+                status.style.background = '#fef3c7';
+                status.style.color = '#92400e';
+                status.classList.remove('hidden');
+                
+                if (isFirebaseReady && gameState.roomCode) {
+                    database.ref(`rooms/${gameState.roomCode}/xoState/gameOver`).set(true);
+                }
+            } else {
+                // Next player
+                xoCurrentPlayer = xoCurrentPlayer === 'X' ? 'O' : 'X';
+                updateXOTurnInfo();
+            }
+        }
+        
+        function updateXOBoard() {
+            const cells = document.querySelectorAll('.xo-cell');
+            xoBoard.forEach((value, index) => {
+                if (value === 'X') {
+                    cells[index].textContent = '❌';
+                    cells[index].disabled = true;
+                } else if (value === 'O') {
+                    cells[index].textContent = '⭕';
+                    cells[index].disabled = true;
+                } else {
+                    cells[index].textContent = '';
+                    cells[index].disabled = xoGameOver;
+                }
+            });
+        }
+        
+        function updateXOTurnInfo() {
+            const turnInfo = document.getElementById('xoTurnInfo');
+            const currentPlayerName = xoPlayers[xoCurrentPlayer];
+            
+            if (xoGameOver) {
+                turnInfo.textContent = '🏁 اللعبة انتهت | Game Over';
+            } else if (xoMySymbol === xoCurrentPlayer) {
+                turnInfo.textContent = `🎯 دورك! (${xoCurrentPlayer}) | Your turn! (${xoCurrentPlayer})`;
+                turnInfo.style.background = '#dcfce7';
+            } else {
+                turnInfo.textContent = `⏳ دور ${currentPlayerName} (${xoCurrentPlayer}) | ${currentPlayerName}'s turn (${xoCurrentPlayer})`;
+                turnInfo.style.background = '#dbeafe';
+            }
+        }
+        
+        function checkXOWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+            
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (xoBoard[a] && xoBoard[a] === xoBoard[b] && xoBoard[a] === xoBoard[c]) {
+                    return xoBoard[a];
+                }
+            }
+            
+            return null;
+        }
+        
+        function resetXO() {
+            xoBoard = Array(9).fill(null);
+            xoCurrentPlayer = 'X';
+            xoGameOver = false;
+            document.getElementById('xoStatus').classList.add('hidden');
+            
+            if (isFirebaseReady && gameState.roomCode) {
+                database.ref(`rooms/${gameState.roomCode}/xoState`).set({
+                    board: xoBoard,
+                    currentPlayer: 'X',
+                    gameOver: false,
+                    players: xoPlayers,
+                    timestamp: Date.now()
+                });
+            }
+            
+            updateXOBoard();
+            updateXOTurnInfo();
+        }
+
+        // ============================================
+        // CONNECT FOUR GAME
+        // ============================================
+        
+        let connectFourBoard = Array(42).fill(null); // 7x6 grid
+        let connectFourCurrentPlayer = '🔴';
+        let connectFourPlayers = { '🔴': null, '🟡': null };
+        let connectFourGameOver = false;
+        let connectFourMySymbol = null;
+        
+        function startConnectFourGame() {
+            gameState.round++;
+            connectFourGameOver = false;
+            
+            // Initialize board
+            const boardEl = document.getElementById('connectFourBoard');
+            boardEl.innerHTML = '';
+            connectFourBoard = Array(42).fill(null);
+            
+            for (let i = 0; i < 42; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'connect-four-cell';
+                const col = i % 7;
+                cell.onclick = () => dropConnectFourToken(col);
+                boardEl.appendChild(cell);
+            }
+            
+            // Assign players
+            if (isFirebaseReady && gameState.roomCode) {
+                const roomRef = database.ref(`rooms/${gameState.roomCode}/players`);
+                roomRef.once('value', (snapshot) => {
+                    const players = [];
+                    snapshot.forEach((child) => {
+                        const player = child.val();
+                        if (player.role === 'player' || !player.role) {
+                            players.push(player.name);
+                        }
+                    });
+                    
+                    if (players.length >= 2) {
+                        connectFourPlayers['🔴'] = players[0];
+                        connectFourPlayers['🟡'] = players[1];
+                        
+                        if (gameState.playerName === connectFourPlayers['🔴']) {
+                            connectFourMySymbol = '🔴';
+                        } else if (gameState.playerName === connectFourPlayers['🟡']) {
+                            connectFourMySymbol = '🟡';
+                        } else {
+                            connectFourMySymbol = null;
+                        }
+                        
+                        updateConnectFourTurnInfo();
+                        setupConnectFourListener();
+                        
+                        if (gameState.isHost) {
+                            database.ref(`rooms/${gameState.roomCode}/connectFourState`).set({
+                                board: connectFourBoard,
+                                currentPlayer: '🔴',
+                                gameOver: false,
+                                players: connectFourPlayers,
+                                timestamp: Date.now()
+                            });
+                        }
+                    } else {
+                        document.getElementById('connectFourTurnInfo').textContent = '⚠️ يلزم لاعبان على الأقل | Need at least 2 players';
+                    }
+                });
+            }
+        }
+        
+        function setupConnectFourListener() {
+            if (!isFirebaseReady || !gameState.roomCode) return;
+            
+            const stateRef = database.ref(`rooms/${gameState.roomCode}/connectFourState`);
+            stateRef.on('value', (snapshot) => {
+                const state = snapshot.val();
+                if (state) {
+                    connectFourBoard = state.board;
+                    connectFourCurrentPlayer = state.currentPlayer;
+                    connectFourGameOver = state.gameOver;
+                    connectFourPlayers = state.players;
+                    
+                    updateConnectFourBoard();
+                    updateConnectFourTurnInfo();
+                }
+            });
+        }
+        
+        function dropConnectFourToken(col) {
+            if (connectFourGameOver) return;
+            
+            if (connectFourMySymbol !== connectFourCurrentPlayer) {
+                alert('ليس دورك! | Not your turn!');
+                return;
+            }
+            
+            if (gameState.role === 'observer') {
+                alert('👁️ أنت مراقب - لا يمكنك اللعب');
+                return;
+            }
+            
+            // Find lowest empty row in column
+            for (let row = 5; row >= 0; row--) {
+                const index = row * 7 + col;
+                if (connectFourBoard[index] === null) {
+                    connectFourBoard[index] = connectFourCurrentPlayer;
+                    
+                    // Update Firebase
+                    if (isFirebaseReady && gameState.roomCode) {
+                        database.ref(`rooms/${gameState.roomCode}/connectFourState`).update({
+                            board: connectFourBoard,
+                            currentPlayer: connectFourCurrentPlayer === '🔴' ? '🟡' : '🔴',
+                            timestamp: Date.now()
+                        });
+                    } else {
+                        updateConnectFourBoard();
+                    }
+                    
+                    // Check winner
+                    const winner = checkConnectFourWinner();
+                    if (winner) {
+                        connectFourGameOver = true;
+                        const winnerName = connectFourPlayers[winner];
+                        const status = document.getElementById('connectFourStatus');
+                        
+                        if (winnerName === gameState.playerName) {
+                            status.textContent = `🎉 فزت! | You won!`;
+                            gameState.score += 40;
+                        } else {
+                            status.textContent = `🏆 ${winnerName} فاز! | ${winnerName} won!`;
+                        }
+                        
+                        status.style.background = '#dcfce7';
+                        status.style.color = '#166534';
+                        status.classList.remove('hidden');
+                        
+                        updateScoreboard();
+                        
+                        if (isFirebaseReady && gameState.roomCode) {
+                            database.ref(`rooms/${gameState.roomCode}/connectFourState/gameOver`).set(true);
+                        }
+                    } else if (connectFourBoard.every(cell => cell !== null)) {
+                        // Draw
+                        connectFourGameOver = true;
+                        const status = document.getElementById('connectFourStatus');
+                        status.textContent = '🤝 تعادل! | Draw!';
+                        status.style.background = '#fef3c7';
+                        status.style.color = '#92400e';
+                        status.classList.remove('hidden');
+                    } else {
+                        connectFourCurrentPlayer = connectFourCurrentPlayer === '🔴' ? '🟡' : '🔴';
+                        updateConnectFourTurnInfo();
+                    }
+                    
+                    return;
+                }
+            }
+        }
+        
+        function updateConnectFourBoard() {
+            const cells = document.querySelectorAll('.connect-four-cell');
+            connectFourBoard.forEach((value, index) => {
+                cells[index].textContent = value || '';
+            });
+        }
+        
+        function updateConnectFourTurnInfo() {
+            const turnInfo = document.getElementById('connectFourTurnInfo');
+            const currentPlayerName = connectFourPlayers[connectFourCurrentPlayer];
+            
+            if (connectFourGameOver) {
+                turnInfo.textContent = '🏁 اللعبة انتهت | Game Over';
+            } else if (connectFourMySymbol === connectFourCurrentPlayer) {
+                turnInfo.textContent = `🎯 دورك! (${connectFourCurrentPlayer}) | Your turn!`;
+                turnInfo.style.background = '#dcfce7';
+            } else {
+                turnInfo.textContent = `⏳ دور ${currentPlayerName} (${connectFourCurrentPlayer})`;
+                turnInfo.style.background = '#dbeafe';
+            }
+        }
+        
+        function checkConnectFourWinner() {
+            // Check all possible 4-in-a-row patterns
+            const checkLine = (a, b, c, d) => {
+                return connectFourBoard[a] && 
+                       connectFourBoard[a] === connectFourBoard[b] && 
+                       connectFourBoard[a] === connectFourBoard[c] && 
+                       connectFourBoard[a] === connectFourBoard[d];
+            };
+            
+            // Horizontal
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const i = row * 7 + col;
+                    if (checkLine(i, i+1, i+2, i+3)) return connectFourBoard[i];
+                }
+            }
+            
+            // Vertical
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const i = row * 7 + col;
+                    if (checkLine(i, i+7, i+14, i+21)) return connectFourBoard[i];
+                }
+            }
+            
+            // Diagonal (down-right)
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 4; col++) {
+                    const i = row * 7 + col;
+                    if (checkLine(i, i+8, i+16, i+24)) return connectFourBoard[i];
+                }
+            }
+            
+            // Diagonal (down-left)
+            for (let row = 0; row < 3; row++) {
+                for (let col = 3; col < 7; col++) {
+                    const i = row * 7 + col;
+                    if (checkLine(i, i+6, i+12, i+18)) return connectFourBoard[i];
+                }
+            }
+            
+            return null;
+        }
+        
+        function resetConnectFour() {
+            connectFourBoard = Array(42).fill(null);
+            connectFourCurrentPlayer = '🔴';
+            connectFourGameOver = false;
+            document.getElementById('connectFourStatus').classList.add('hidden');
+            
+            if (isFirebaseReady && gameState.roomCode) {
+                database.ref(`rooms/${gameState.roomCode}/connectFourState`).set({
+                    board: connectFourBoard,
+                    currentPlayer: '🔴',
+                    gameOver: false,
+                    players: connectFourPlayers,
+                    timestamp: Date.now()
+                });
+            }
+            
+            updateConnectFourBoard();
+            updateConnectFourTurnInfo();
+        }
         
         function toggleChat() {
             chatOpen = !chatOpen;
