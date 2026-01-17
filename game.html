@@ -144,6 +144,27 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
+        
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes popOut {
+            to {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+        }
 
         .color-buttons {
             display: grid;
@@ -789,30 +810,32 @@
 
         .connect-four-board {
             display: grid;
-            grid-template-columns: repeat(7, 60px);
-            grid-template-rows: repeat(6, 60px);
-            gap: 8px;
+            grid-template-columns: repeat(7, 55px);
+            grid-template-rows: repeat(6, 55px);
+            gap: 6px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 15px;
+            padding: 12px;
             border-radius: 20px;
+            margin: 0 auto;
+            max-width: fit-content;
         }
 
         .connect-four-cell {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 36px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .connect-four-cell:hover {
             background: #f0f9ff;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
         .turn-indicator {
@@ -827,25 +850,203 @@
 
         @media (max-width: 600px) {
             .xo-cell {
-                width: 80px;
-                height: 80px;
-                font-size: 36px;
+                width: 70px;
+                height: 70px;
+                font-size: 32px;
             }
 
             .xo-board {
-                grid-template-columns: repeat(3, 80px);
+                grid-template-columns: repeat(3, 70px);
             }
 
             .connect-four-board {
-                grid-template-columns: repeat(7, 45px);
-                grid-template-rows: repeat(6, 45px);
-                gap: 5px;
+                grid-template-columns: repeat(7, 42px);
+                grid-template-rows: repeat(6, 42px);
+                gap: 4px;
+                padding: 8px;
             }
 
             .connect-four-cell {
-                width: 45px;
-                height: 45px;
-                font-size: 30px;
+                width: 42px;
+                height: 42px;
+                font-size: 26px;
+            }
+
+            .turn-indicator {
+                font-size: 16px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .connect-four-board {
+                grid-template-columns: repeat(7, 38px);
+                grid-template-rows: repeat(6, 38px);
+                gap: 3px;
+                padding: 6px;
+            }
+
+            .connect-four-cell {
+                width: 38px;
+                height: 38px;
+                font-size: 22px;
+            }
+        }
+
+        /* Spot the Difference Game */
+        .difference-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .difference-canvas-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: #f1f5f9;
+        }
+
+        .difference-canvas-wrapper canvas {
+            display: block;
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+
+        .difference-label {
+            text-align: center;
+            font-weight: bold;
+            color: #6366f1;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .difference-marker {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #22c55e;
+            border-radius: 50%;
+            pointer-events: none;
+            background: rgba(34, 197, 94, 0.2);
+            transform: translate(-50%, -50%);
+            animation: markerPulse 0.5s ease-out;
+        }
+
+        @keyframes markerPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .difference-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 3px;
+            background: #e2e8f0;
+            padding: 8px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .difference-cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .difference-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .difference-cell.found {
+            border: 3px solid #22c55e;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+        }
+
+        .difference-cell.found::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .difference-stats {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .difference-stat-box {
+            background: #f0f9ff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-align: center;
+            flex: 1;
+            border: 2px solid #6366f1;
+        }
+
+        .difference-stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .difference-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #6366f1;
+        }
+
+        @media (max-width: 600px) {
+            .difference-canvas-wrapper canvas {
+                max-width: 300px;
+            }
+
+            .difference-grid {
+                grid-template-columns: repeat(6, 40px);
+                grid-template-rows: repeat(6, 40px);
+                gap: 2px;
+                padding: 5px;
+            }
+
+            .difference-cell {
+                width: 40px;
+                height: 40px;
+            }
+
+            .difference-container {
+                gap: 10px;
+            }
+
+            .difference-marker {
+                width: 30px;
+                height: 30px;
+                border-width: 2px;
             }
         }
     </style>
@@ -1085,6 +1286,11 @@
                         <button class="game-mode-btn" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);" onclick="startGame('reaction')">
                             ⚡ لعبة سرعة البديهة
                         </button>
+                        <!-- DISABLED: Spot the Difference (needs fixing - CORS/image loading issues)
+                        <button class="game-mode-btn" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="startGame('spotDifference')">
+                            🔍 اكتشف الاختلافات | Spot Differences
+                        </button>
+                        -->
                     </div>
                 </div>
             </div>
@@ -1384,6 +1590,40 @@
                 <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
             </div>
         </div>
+
+        <!-- DISABLED: Spot the Difference Game (needs fixing - CORS/image loading issues)
+        <div class="game-area hidden" id="spotDifferenceGame">
+            <h3 style="text-align: center; color: #6366f1; margin-bottom: 15px;">🔍 اكتشف الاختلافات | Spot the Differences</h3>
+            <div class="difference-stats">
+                <div class="difference-stat-box">
+                    <div class="difference-stat-label">الوقت | Time</div>
+                    <div class="difference-stat-value" id="differenceTimer">00:00</div>
+                </div>
+                <div class="difference-stat-box">
+                    <div class="difference-stat-label">وُجِد | Found</div>
+                    <div class="difference-stat-value" id="differenceFound">0/5</div>
+                </div>
+            </div>
+            <div class="difference-container">
+                <div>
+                    <div class="difference-label">الصورة الأصلية | Original</div>
+                    <div class="difference-canvas-wrapper" id="canvasWrapperLeft">
+                        <canvas id="differenceCanvasLeft"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <div class="difference-label">ابحث عن الاختلافات | Find Differences</div>
+                    <div class="difference-canvas-wrapper" id="canvasWrapperRight">
+                        <canvas id="differenceCanvasRight"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="status-message hidden" id="differenceStatus"></div>
+            <button class="submit-btn" onclick="startNewDifferenceRound()" style="margin-top: 15px;">🔄 جولة جديدة | New Round</button>
+            <button class="game-mode-btn back-btn" onclick="backToMenu()">عودة للقائمة</button>
+            <button class="submit-btn" onclick="leaveRoom()" style="background: #ef4444; margin-top: 10px;">🚪 مغادرة الغرفة</button>
+        </div>
+        -->
 
         <!-- Scoreboard -->
         <div class="scoreboard">
@@ -1963,7 +2203,10 @@
                             'trueFalse': 'trueFalseGame',
                             'wordChain': 'wordChainGame',
                             'drawing': 'drawingGame',
-                            'memory': 'memoryGame'
+                            'memory': 'memoryGame',
+                            'xo': 'xoGame',
+                            'connectFour': 'connectFourGame',
+                            'spotDifference': 'spotDifferenceGame'
                         };
                         const gameScreen = gameScreenMap[gameState.currentGame];
                         if (gameScreen) {
@@ -1986,6 +2229,12 @@
                                 startDrawingGame();
                             } else if (gameState.currentGame === 'memory') {
                                 startMemoryGame();
+                            } else if (gameState.currentGame === 'xo') {
+                                startXOGame();
+                            } else if (gameState.currentGame === 'connectFour') {
+                                startConnectFourGame();
+                            } else if (gameState.currentGame === 'spotDifference') {
+                                startSpotDifferenceGame();
                             }
                         }
                     }
@@ -2081,6 +2330,10 @@
                 gameState.currentScreen = 'connectFourGame';
                 document.getElementById('connectFourGame').classList.remove('hidden');
                 startConnectFourGame();
+            } else if (type === 'spotDifference') {
+                gameState.currentScreen = 'spotDifferenceGame';
+                document.getElementById('spotDifferenceGame').classList.remove('hidden');
+                startSpotDifferenceGame();
             }
             
             saveGameState();
@@ -3754,9 +4007,12 @@
             for (let i = 0; i < 9; i++) {
                 const cell = document.createElement('button');
                 cell.className = 'xo-cell';
-                cell.onclick = () => makeXOMove(i);
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => makeXOMove(i));
                 boardEl.appendChild(cell);
             }
+            
+            console.log('✅ XO board initialized with click handlers');
             
             // Assign players
             if (isFirebaseReady && gameState.roomCode) {
@@ -3831,7 +4087,12 @@
         }
         
         function makeXOMove(index) {
-            if (xoBoard[index] !== null || xoGameOver) return;
+            console.log('🎯 XO Move attempted:', index, 'Current:', xoBoard[index], 'Game Over:', xoGameOver);
+            
+            if (xoBoard[index] !== null || xoGameOver) {
+                console.log('❌ Move blocked: Cell occupied or game over');
+                return;
+            }
             
             // Check if it's my turn
             if (xoMySymbol !== xoCurrentPlayer) {
@@ -3993,9 +4254,12 @@
                 const cell = document.createElement('div');
                 cell.className = 'connect-four-cell';
                 const col = i % 7;
-                cell.onclick = () => dropConnectFourToken(col);
+                cell.dataset.col = col;
+                cell.addEventListener('click', () => dropConnectFourToken(col));
                 boardEl.appendChild(cell);
             }
+            
+            console.log('✅ Connect Four board initialized with click handlers');
             
             // Assign players
             if (isFirebaseReady && gameState.roomCode) {
@@ -4059,7 +4323,12 @@
         }
         
         function dropConnectFourToken(col) {
-            if (connectFourGameOver) return;
+            console.log('🎯 Connect Four drop attempted:', col, 'Game Over:', connectFourGameOver);
+            
+            if (connectFourGameOver) {
+                console.log('❌ Drop blocked: Game over');
+                return;
+            }
             
             if (connectFourMySymbol !== connectFourCurrentPlayer) {
                 alert('ليس دورك! | Not your turn!');
@@ -4214,6 +4483,509 @@
             updateConnectFourBoard();
             updateConnectFourTurnInfo();
         }
+
+        // ============================================
+        // SPOT THE DIFFERENCE GAME - DISABLED (needs fixing)
+        // TODO: Fix CORS issues with external image loading
+        // TODO: Implement proper image difference creation without overlays
+        // ============================================
+        /* COMMENTED OUT - NOT WORKING PROPERLY
+        
+        let differenceCanvasLeft = null;
+        let differenceCanvasRight = null;
+        let differenceCtxLeft = null;
+        let differenceCtxRight = null;
+        let differencePositions = [];
+        let foundDifferences = []; // Local player's found differences
+        let differenceTimer = null;
+        let differenceStartTime = 0;
+        let differenceGameActive = false;
+        let currentDifferenceImage = null;
+        let differenceImageUrl = ''; // Synced image URL
+        let differenceListenerAttached = false;
+        
+        const DIFFERENCE_POINTS = [20, 15, 12, 10, 8]; // Points for 1st, 2nd, 3rd, 4th, 5th finder
+        
+        function startSpotDifferenceGame() {
+            gameState.round++;
+            
+            // Initialize canvases
+            differenceCanvasLeft = document.getElementById('differenceCanvasLeft');
+            differenceCanvasRight = document.getElementById('differenceCanvasRight');
+            differenceCtxLeft = differenceCanvasLeft.getContext('2d');
+            differenceCtxRight = differenceCanvasRight.getContext('2d');
+            
+            // Add click listeners (only once)
+            if (!differenceListenerAttached) {
+                differenceCanvasRight.addEventListener('click', handleDifferenceClick);
+                differenceListenerAttached = true;
+            }
+            
+            // Setup Firebase listener for multiplayer
+            setupDifferenceGameListener();
+            
+            // Show host controls or wait message
+            updateDifferenceControls();
+        }
+        
+        function updateDifferenceControls() {
+            const startBtn = document.querySelector('#spotDifferenceSection .submit-btn');
+            if (gameState.isHost) {
+                startBtn.textContent = '▶️ بدء الجولة | Start Round';
+                startBtn.style.display = 'inline-block';
+            } else {
+                startBtn.style.display = 'none';
+            }
+        }
+        
+        async function startNewDifferenceRound() {
+            // Only host can start
+            if (!gameState.isHost) {
+                alert('⛔ فقط المضيف يمكنه بدء الجولة | Only host can start round');
+                return;
+            }
+            
+            differenceGameActive = false;
+            foundDifferences = [];
+            differencePositions = [];
+            
+            // Show loading
+            const status = document.getElementById('differenceStatus');
+            status.textContent = '⏳ جاري تحميل صورة... | Loading image...';
+            status.style.background = '#dbeafe';
+            status.style.color = '#1e40af';
+            status.classList.remove('hidden');
+            
+            document.getElementById('differenceFound').textContent = '0/5';
+            
+            try {
+                // Use Picsum.photos - simple and reliable
+                const randomId = Math.floor(Math.random() * 1000) + 1;
+                const width = 400;
+                const height = 300;
+                const imageUrl = `https://picsum.photos/${width}/${height}?random=${Date.now()}`;
+                differenceImageUrl = imageUrl;
+                
+                await loadDifferenceImage(imageUrl);
+                
+                // Sync to Firebase for all players
+                syncDifferenceGameToFirebase();
+            } catch (error) {
+                console.error('Error loading image:', error);
+                // Fallback to colored blocks version
+                status.textContent = '⚠️ فشل تحميل الصورة، استخدام وضع الألوان | Image load failed, using color mode';
+                setTimeout(() => {
+                    startColorBlockVersion();
+                }, 1500);
+            }
+        }
+        
+        function loadDifferenceImage(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                // Remove crossOrigin to avoid CORS issues
+                
+                img.onload = () => {
+                    currentDifferenceImage = img;
+                    
+                    // Set canvas size (maintain aspect ratio, max 400px width)
+                    const maxWidth = 400;
+                    const scale = maxWidth / img.width;
+                    const width = maxWidth;
+                    const height = img.height * scale;
+                    
+                    differenceCanvasLeft.width = width;
+                    differenceCanvasLeft.height = height;
+                    differenceCanvasRight.width = width;
+                    differenceCanvasRight.height = height;
+                    
+                    // Draw original image on both canvases
+                    differenceCtxLeft.drawImage(img, 0, 0, width, height);
+                    differenceCtxRight.drawImage(img, 0, 0, width, height);
+                    
+                    // Create 5 differences on right canvas
+                    createDifferences(width, height);
+                    
+                    // Hide loading message
+                    document.getElementById('differenceStatus').classList.add('hidden');
+                    
+                    // Start game (will be triggered by Firebase for all players)
+                    if (gameState.isHost) {
+                        differenceGameActive = true;
+                        differenceStartTime = Date.now();
+                        
+                        // Start timer
+                        if (differenceTimer) clearInterval(differenceTimer);
+                        differenceTimer = setInterval(updateDifferenceTimer, 1000);
+                    }
+                    
+                    console.log('🔍 Spot the Difference loaded. Differences:', differencePositions);
+                    resolve();
+                };
+                
+                img.onerror = () => {
+                    console.error('Image load error for:', imageUrl);
+                    reject(new Error('Image load error'));
+                };
+                
+                img.src = imageUrl;
+            });
+        }
+        
+        function createDifferences(width, height) {
+            differencePositions = [];
+            const minDistance = 80; // Minimum distance between differences
+            
+            // Generate 5 random positions
+            while (differencePositions.length < 5) {
+                const x = Math.random() * (width - 80) + 40;
+                const y = Math.random() * (height - 80) + 40;
+                
+                // Check distance from other differences
+                let tooClose = false;
+                for (const pos of differencePositions) {
+                    const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+                    if (dist < minDistance) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                
+                if (!tooClose) {
+                    differencePositions.push({ x, y, radius: 30 });
+                }
+            }
+            
+            // Draw differences on right canvas by modifying actual pixels
+            differencePositions.forEach((pos, index) => {
+                const types = ['darken', 'brighten', 'blur', 'colorize', 'saturate'];
+                const type = types[index % types.length];
+                
+                // Use canvas filters and blend modes instead of getImageData
+                differenceCtxRight.save();
+                
+                // Create circular clipping path
+                differenceCtxRight.beginPath();
+                differenceCtxRight.arc(pos.x, pos.y, pos.radius, 0, Math.PI * 2);
+                differenceCtxRight.clip();
+                
+                switch (type) {
+                    case 'darken':
+                        differenceCtxRight.globalCompositeOperation = 'darken';
+                        differenceCtxRight.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                        differenceCtxRight.fillRect(pos.x - pos.radius, pos.y - pos.radius, pos.radius * 2, pos.radius * 2);
+                        break;
+                        
+                    case 'brighten':
+                        differenceCtxRight.globalCompositeOperation = 'lighten';
+                        differenceCtxRight.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        differenceCtxRight.fillRect(pos.x - pos.radius, pos.y - pos.radius, pos.radius * 2, pos.radius * 2);
+                        break;
+                        
+                    case 'blur':
+                        // Create pixelated effect
+                        differenceCtxRight.globalCompositeOperation = 'source-over';
+                        differenceCtxRight.fillStyle = 'rgba(128, 128, 128, 0.3)';
+                        for (let i = 0; i < 10; i++) {
+                            const r = pos.radius * Math.random();
+                            const angle = Math.random() * Math.PI * 2;
+                            const x = pos.x + Math.cos(angle) * r;
+                            const y = pos.y + Math.sin(angle) * r;
+                            differenceCtxRight.fillRect(x - 3, y - 3, 6, 6);
+                        }
+                        break;
+                        
+                    case 'colorize':
+                        differenceCtxRight.globalCompositeOperation = 'overlay';
+                        differenceCtxRight.fillStyle = 'rgba(255, 50, 50, 0.6)';
+                        differenceCtxRight.fillRect(pos.x - pos.radius, pos.y - pos.radius, pos.radius * 2, pos.radius * 2);
+                        break;
+                        
+                    case 'saturate':
+                        differenceCtxRight.globalCompositeOperation = 'multiply';
+                        differenceCtxRight.fillStyle = 'rgba(100, 200, 255, 0.4)';
+                        differenceCtxRight.fillRect(pos.x - pos.radius, pos.y - pos.radius, pos.radius * 2, pos.radius * 2);
+                        break;
+                }
+                
+                differenceCtxRight.restore();
+            });
+        }
+        
+        function handleDifferenceClick(event) {
+            if (!differenceGameActive) return;
+            if (gameState.role === 'observer') {
+                alert('👀 المراقب لا يمكنه اللعب | Observer cannot play');
+                return;
+            }
+            
+            const rect = differenceCanvasRight.getBoundingClientRect();
+            const scaleX = differenceCanvasRight.width / rect.width;
+            const scaleY = differenceCanvasRight.height / rect.height;
+            
+            const clickX = (event.clientX - rect.left) * scaleX;
+            const clickY = (event.clientY - rect.top) * scaleY;
+            
+            // Check if click is within any difference area
+            for (let i = 0; i < differencePositions.length; i++) {
+                if (foundDifferences.includes(i)) continue;
+                
+                const pos = differencePositions[i];
+                const distance = Math.sqrt((clickX - pos.x) ** 2 + (clickY - pos.y) ** 2);
+                
+                if (distance <= pos.radius) {
+                    // Found a difference!
+                    foundDifferences.push(i);
+                    
+                    // Submit to Firebase (race condition - first to submit wins)
+                    submitDifferenceFound(i);
+                    
+                    // Add visual marker
+                    addDifferenceMarker(event.clientX - rect.left, event.clientY - rect.top);
+                    
+                    // Update counter
+                    document.getElementById('differenceFound').textContent = `${foundDifferences.length}/5`;
+                    
+                    return;
+                }
+            }
+            
+            // Wrong click - show red flash
+            const wrapper = document.getElementById('canvasWrapperRight');
+            wrapper.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.8)';
+            setTimeout(() => {
+                wrapper.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
+            }, 200);
+        }
+        
+        function addDifferenceMarker(x, y) {
+            const wrapper = document.getElementById('canvasWrapperRight');
+            const marker = document.createElement('div');
+            marker.className = 'difference-marker';
+            marker.style.left = x + 'px';
+            marker.style.top = y + 'px';
+            wrapper.appendChild(marker);
+        }
+        
+        function startColorBlockVersion() {
+            // Fallback: Use simple colored patterns if image loading fails
+            const width = 400;
+            const height = 300;
+            
+            differenceCanvasLeft.width = width;
+            differenceCanvasLeft.height = height;
+            differenceCanvasRight.width = width;
+            differenceCanvasRight.height = height;
+            
+            // Draw colorful pattern
+            const colors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899'];
+            const gridSize = 50;
+            
+            for (let y = 0; y < height; y += gridSize) {
+                for (let x = 0; x < width; x += gridSize) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    differenceCtxLeft.fillStyle = color;
+                    differenceCtxLeft.fillRect(x, y, gridSize, gridSize);
+                    differenceCtxRight.fillStyle = color;
+                    differenceCtxRight.fillRect(x, y, gridSize, gridSize);
+                }
+            }
+            
+            // Create 5 differences
+            differencePositions = [];
+            for (let i = 0; i < 5; i++) {
+                const x = Math.random() * (width - 60) + 30;
+                const y = Math.random() * (height - 60) + 30;
+                differencePositions.push({ x, y, radius: 25 });
+                
+                // Draw different color circle
+                differenceCtxRight.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                differenceCtxRight.beginPath();
+                differenceCtxRight.arc(x, y, 25, 0, Math.PI * 2);
+                differenceCtxRight.fill();
+            }
+            
+            // Start game
+            differenceGameActive = true;
+            differenceStartTime = Date.now();
+            
+            if (differenceTimer) clearInterval(differenceTimer);
+            differenceTimer = setInterval(updateDifferenceTimer, 1000);
+            
+            document.getElementById('differenceStatus').classList.add('hidden');
+        }
+        
+        function updateDifferenceTimer() {
+            if (!differenceGameActive) return;
+            
+            const elapsed = Math.floor((Date.now() - differenceStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('differenceTimer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        
+        function completeDifferenceGame() {
+            // This is called when a player finds all 5 differences
+            const elapsed = Math.floor((Date.now() - differenceStartTime) / 1000);
+            
+            const status = document.getElementById('differenceStatus');
+            status.textContent = `🎉 رائع! أكملت كل الفروقات في ${elapsed} ثانية! | Great! Found all differences in ${elapsed}s!`;
+            status.style.background = '#dcfce7';
+            status.style.color = '#166534';
+            status.classList.remove('hidden');
+            
+            console.log(`✅ Player completed all differences in ${elapsed}s`);
+        }
+        
+        // ============================================
+        // SPOT DIFFERENCE MULTIPLAYER SYNC
+        // ============================================
+        
+        function syncDifferenceGameToFirebase() {
+            if (!currentRoom) return;
+            
+            const gameData = {
+                imageUrl: differenceImageUrl,
+                positions: differencePositions,
+                active: true,
+                startTime: Date.now(),
+                foundBy: {}, // {differenceIndex: [player1, player2, ...]}
+                round: gameState.round
+            };
+            
+            set(ref(db, `rooms/${currentRoom}/differenceGame`), gameData)
+                .then(() => {
+                    console.log('✅ Difference game synced to Firebase');
+                })
+                .catch(err => {
+                    console.error('Firebase sync error:', err);
+                });
+        }
+        
+        function setupDifferenceGameListener() {
+            if (!currentRoom) return;
+            
+            const gameRef = ref(db, `rooms/${currentRoom}/differenceGame`);
+            
+            onValue(gameRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                // If not host, load the game from Firebase
+                if (!gameState.isHost && data.imageUrl && data.imageUrl !== differenceImageUrl) {
+                    differenceImageUrl = data.imageUrl;
+                    differencePositions = data.positions || [];
+                    loadDifferenceImage(differenceImageUrl).catch(err => {
+                        console.error('Failed to load synced image:', err);
+                    });
+                }
+                
+                // Start game for all players when host starts
+                if (data.active && !differenceGameActive) {
+                    differenceGameActive = true;
+                    differenceStartTime = data.startTime;
+                    
+                    if (differenceTimer) clearInterval(differenceTimer);
+                    differenceTimer = setInterval(updateDifferenceTimer, 1000);
+                    
+                    document.getElementById('differenceStatus').classList.add('hidden');
+                    
+                    console.log('🎮 Difference game started for all players');
+                }
+                
+                // Update found differences display
+                if (data.foundBy) {
+                    updateDifferenceProgress(data.foundBy);
+                }
+            });
+        }
+        
+        function submitDifferenceFound(differenceIndex) {
+            if (!currentRoom) return;
+            
+            const foundRef = ref(db, `rooms/${currentRoom}/differenceGame/foundBy/${differenceIndex}`);
+            
+            get(foundRef).then((snapshot) => {
+                const finders = snapshot.val() || [];
+                
+                // Check if this player already submitted
+                if (finders.includes(gameState.playerName)) {
+                    return;
+                }
+                
+                // Add player to finders list
+                finders.push(gameState.playerName);
+                
+                set(foundRef, finders).then(() => {
+                    // Award points based on position (1st, 2nd, 3rd, etc.)
+                    const position = finders.length - 1;
+                    if (position < DIFFERENCE_POINTS.length) {
+                        const points = DIFFERENCE_POINTS[position];
+                        gameState.score += points;
+                        updateScoreboard();
+                        saveGameState();
+                        
+                        console.log(`🎯 Found difference #${differenceIndex + 1}! Position: ${position + 1}, Points: +${points}`);
+                        
+                        // Show notification
+                        showQuickNotification(`+${points} نقاط | points!`, '#22c55e');
+                    }
+                    
+                    // Check if player found all 5
+                    if (foundDifferences.length === 5) {
+                        completeDifferenceGame();
+                    }
+                });
+            });
+        }
+        
+        function updateDifferenceProgress(foundBy) {
+            // Show how many differences have been found globally
+            const totalFound = Object.keys(foundBy).length;
+            
+            if (totalFound === 5 && differenceGameActive) {
+                // All differences found - end game
+                differenceGameActive = false;
+                clearInterval(differenceTimer);
+                
+                const status = document.getElementById('differenceStatus');
+                status.textContent = '🏁 تم العثور على جميع الفروقات! | All differences found!';
+                status.style.background = '#dbeafe';
+                status.style.color = '#1e40af';
+                status.classList.remove('hidden');
+            }
+        }
+        
+        function showQuickNotification(message, color) {
+            const notif = document.createElement('div');
+            notif.textContent = message;
+            notif.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.5);
+                background: ${color};
+                color: white;
+                padding: 20px 40px;
+                border-radius: 15px;
+                font-size: 24px;
+                font-weight: bold;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                opacity: 0;
+                animation: popIn 0.6s forwards;
+            `;
+            
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'popOut 0.3s forwards';
+                setTimeout(() => notif.remove(), 300);
+            }, 1500);
+        }
+        
+        END OF SPOT THE DIFFERENCE DISABLED CODE */
         
         function toggleChat() {
             chatOpen = !chatOpen;
@@ -4420,6 +5192,9 @@
             sendSystemMessage(`👋 ${gameState.playerName} انضم ${roleText} | joined ${roleText}`);
         }
 
+        // Debounce Firebase writes to reduce load
+        let updateRoomScoresTimeout = null;
+        
         function updateRoomScores() {
             if (!gameState.roomCode) return;
             
@@ -4430,16 +5205,19 @@
             }
             
             if (isFirebaseReady) {
-                // Use Firebase for real-time sync
-                const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
-                playerRef.set({
-                    name: gameState.playerName,
-                    score: gameState.score,
-                    role: gameState.role || 'player',
-                    isModerator: false,
-                    timestamp: Date.now()
-                });
-                console.log(`Firebase: Updated ${gameState.playerName} score to ${gameState.score}`);
+                // Debounce: Wait 500ms before writing to Firebase
+                clearTimeout(updateRoomScoresTimeout);
+                updateRoomScoresTimeout = setTimeout(() => {
+                    const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
+                    playerRef.set({
+                        name: gameState.playerName,
+                        score: gameState.score,
+                        role: gameState.role || 'player',
+                        isModerator: false,
+                        timestamp: Date.now()
+                    });
+                    console.log(`Firebase: Updated ${gameState.playerName} score to ${gameState.score}`);
+                }, 500);
             } else {
                 // Fallback to localStorage
                 const roomKey = `room_${gameState.roomCode}_scores`;
@@ -4678,7 +5456,7 @@
             console.log('📊 Scoreboard updated with', sortedPlayers.length, 'players');
         }
 
-        // Auto-refresh scoreboard every 2 seconds to show live updates
+        // Auto-refresh scoreboard every 3 seconds (reduced from 2s to save Firebase reads)
         let scoreboardInterval = null;
         
         function startScoreboardAutoRefresh() {
@@ -4700,7 +5478,7 @@
                         }
                     }
                 }
-            }, 2000);
+            }, 3000);
         }
 
         function stopScoreboardAutoRefresh() {
@@ -4797,12 +5575,37 @@
             }
         });
 
+        // Cleanup old rooms automatically (run every 10 minutes)
+        function cleanupOldRooms() {
+            if (!isFirebaseReady || !gameState.isHost) return;
+            
+            const roomsRef = database.ref('rooms');
+            const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+            
+            roomsRef.once('value', (snapshot) => {
+                snapshot.forEach((roomSnapshot) => {
+                    const roomData = roomSnapshot.val();
+                    if (roomData.metadata && roomData.metadata.timestamp < oneDayAgo) {
+                        // Delete rooms older than 24 hours
+                        roomSnapshot.ref.remove();
+                        console.log('🗑️ Cleaned up old room:', roomSnapshot.key);
+                    }
+                });
+            });
+        }
+        
+        // Run cleanup every 10 minutes
+        setInterval(cleanupOldRooms, 10 * 60 * 1000);
+
         // Initialize
         window.addEventListener('load', () => {
             console.log('%c🎮 ZedGaming Multiplayer Game', 'color: #6366f1; font-size: 20px; font-weight: bold;');
             console.log('%c🔍 Open Console (F12) to see debug info', 'color: #3b82f6; font-weight: bold;');
             console.log('%c💡 Tip: Open multiple tabs with the same room code to test multiplayer!', 'color: #22c55e;');
             loadGameState();
+            
+            // Run initial cleanup after 5 seconds
+            setTimeout(cleanupOldRooms, 5000);
         });
     </script>
 </body>
