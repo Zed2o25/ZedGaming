@@ -3996,11 +3996,16 @@
         let xoMySymbol = null;
         
         function startXOGame() {
+            console.log('🎮 startXOGame() called');
+            console.log('Firebase ready:', isFirebaseReady, 'Room code:', gameState.roomCode);
+            
             gameState.round++;
             xoGameOver = false;
             
             // Initialize board
             const boardEl = document.getElementById('xoBoard');
+            console.log('Board element:', boardEl);
+            
             boardEl.innerHTML = '';
             xoBoard = Array(9).fill(null);
             
@@ -4008,11 +4013,15 @@
                 const cell = document.createElement('button');
                 cell.className = 'xo-cell';
                 cell.dataset.index = i;
-                cell.addEventListener('click', () => makeXOMove(i));
+                cell.addEventListener('click', () => {
+                    console.log('Cell clicked:', i);
+                    makeXOMove(i);
+                });
                 boardEl.appendChild(cell);
             }
             
-            console.log('✅ XO board initialized with click handlers');
+            console.log('✅ XO board created with', boardEl.children.length, 'cells');
+            console.log('First cell:', boardEl.children[0]);
             
             // Assign players
             if (isFirebaseReady && gameState.roomCode) {
@@ -4060,11 +4069,12 @@
                     }
                 });
             } else {
-                // Local mode
-                xoPlayers.X = gameState.playerName;
-                xoPlayers.O = 'Computer';
-                xoMySymbol = 'X';
+                // Local mode - 2 player hot-seat or practice
+                xoPlayers.X = 'Player X';
+                xoPlayers.O = 'Player O';
+                xoMySymbol = xoCurrentPlayer; // Can play as whoever's turn it is
                 updateXOTurnInfo();
+                console.log('🎮 XO Local Mode - Hot-seat play');
             }
         }
         
@@ -4094,31 +4104,26 @@
                 return;
             }
             
-            // Check if it's my turn
-            if (xoMySymbol !== xoCurrentPlayer) {
-                alert('ليس دورك! | Not your turn!');
-                return;
-            }
-            
-            // Observer can't play
-            if (gameState.role === 'observer') {
-                alert('👁️ أنت مراقب - لا يمكنك اللعب');
-                return;
+            // In multiplayer mode, check if it's my turn
+            if (isFirebaseReady && gameState.roomCode) {
+                if (xoMySymbol !== xoCurrentPlayer) {
+                    alert('ليس دورك! | Not your turn!');
+                    return;
+                }
+                
+                // Observer can't play
+                if (gameState.role === 'observer') {
+                    alert('👁️ أنت مراقب - لا يمكنك اللعب');
+                    return;
+                }
             }
             
             xoBoard[index] = xoCurrentPlayer;
+            console.log('✅ Placed', xoCurrentPlayer, 'at index', index);
+            console.log('Board state:', xoBoard);
             
-            // Update Firebase
-            if (isFirebaseReady && gameState.roomCode) {
-                const xoStateRef = database.ref(`rooms/${gameState.roomCode}/xoState`);
-                xoStateRef.update({
-                    board: xoBoard,
-                    currentPlayer: xoCurrentPlayer === 'X' ? 'O' : 'X',
-                    timestamp: Date.now()
-                });
-            } else {
-                updateXOBoard();
-            }
+            // Update board visually FIRST
+            updateXOBoard();
             
             // Check for winner
             const winner = checkXOWinner();
@@ -4157,9 +4162,20 @@
                     database.ref(`rooms/${gameState.roomCode}/xoState/gameOver`).set(true);
                 }
             } else {
-                // Next player
+                // Continue game - switch turns
                 xoCurrentPlayer = xoCurrentPlayer === 'X' ? 'O' : 'X';
+                console.log('🔄 Turn switched to:', xoCurrentPlayer);
                 updateXOTurnInfo();
+                
+                // Update Firebase with new turn
+                if (isFirebaseReady && gameState.roomCode) {
+                    const xoStateRef = database.ref(`rooms/${gameState.roomCode}/xoState`);
+                    xoStateRef.update({
+                        board: xoBoard,
+                        currentPlayer: xoCurrentPlayer,
+                        timestamp: Date.now()
+                    });
+                }
             }
         }
         
@@ -4242,11 +4258,16 @@
         let connectFourMySymbol = null;
         
         function startConnectFourGame() {
+            console.log('🎮 startConnectFourGame() called');
+            console.log('Firebase ready:', isFirebaseReady, 'Room code:', gameState.roomCode);
+            
             gameState.round++;
             connectFourGameOver = false;
             
             // Initialize board
             const boardEl = document.getElementById('connectFourBoard');
+            console.log('Board element:', boardEl);
+            
             boardEl.innerHTML = '';
             connectFourBoard = Array(42).fill(null);
             
@@ -4255,11 +4276,15 @@
                 cell.className = 'connect-four-cell';
                 const col = i % 7;
                 cell.dataset.col = col;
-                cell.addEventListener('click', () => dropConnectFourToken(col));
+                cell.addEventListener('click', () => {
+                    console.log('Column clicked:', col);
+                    dropConnectFourToken(col);
+                });
                 boardEl.appendChild(cell);
             }
             
-            console.log('✅ Connect Four board initialized with click handlers');
+            console.log('✅ Connect Four board created with', boardEl.children.length, 'cells');
+            console.log('First cell:', boardEl.children[0]);
             
             // Assign players
             if (isFirebaseReady && gameState.roomCode) {
@@ -4301,6 +4326,13 @@
                         document.getElementById('connectFourTurnInfo').textContent = '⚠️ يلزم لاعبان على الأقل | Need at least 2 players';
                     }
                 });
+            } else {
+                // Local mode - 2 player hot-seat
+                connectFourPlayers['🔴'] = 'Player Red';
+                connectFourPlayers['🟡'] = 'Player Yellow';
+                connectFourMySymbol = connectFourCurrentPlayer; // Can play as whoever's turn
+                updateConnectFourTurnInfo();
+                console.log('🎮 Connect Four Local Mode - Hot-seat play');
             }
         }
         
@@ -4330,14 +4362,17 @@
                 return;
             }
             
-            if (connectFourMySymbol !== connectFourCurrentPlayer) {
-                alert('ليس دورك! | Not your turn!');
-                return;
-            }
-            
-            if (gameState.role === 'observer') {
-                alert('👁️ أنت مراقب - لا يمكنك اللعب');
-                return;
+            // In multiplayer mode, check turn and role
+            if (isFirebaseReady && gameState.roomCode) {
+                if (connectFourMySymbol !== connectFourCurrentPlayer) {
+                    alert('ليس دورك! | Not your turn!');
+                    return;
+                }
+                
+                if (gameState.role === 'observer') {
+                    alert('👁️ أنت مراقب - لا يمكنك اللعب');
+                    return;
+                }
             }
             
             // Find lowest empty row in column
@@ -4345,17 +4380,10 @@
                 const index = row * 7 + col;
                 if (connectFourBoard[index] === null) {
                     connectFourBoard[index] = connectFourCurrentPlayer;
+                    console.log('✅ Placed', connectFourCurrentPlayer, 'at index', index, '(row', row, 'col', col, ')');
                     
-                    // Update Firebase
-                    if (isFirebaseReady && gameState.roomCode) {
-                        database.ref(`rooms/${gameState.roomCode}/connectFourState`).update({
-                            board: connectFourBoard,
-                            currentPlayer: connectFourCurrentPlayer === '🔴' ? '🟡' : '🔴',
-                            timestamp: Date.now()
-                        });
-                    } else {
-                        updateConnectFourBoard();
-                    }
+                    // Update board visually FIRST
+                    updateConnectFourBoard();
                     
                     // Check winner
                     const winner = checkConnectFourWinner();
@@ -4389,8 +4417,19 @@
                         status.style.color = '#92400e';
                         status.classList.remove('hidden');
                     } else {
+                        // Continue game - switch turns
                         connectFourCurrentPlayer = connectFourCurrentPlayer === '🔴' ? '🟡' : '🔴';
+                        console.log('🔄 Turn switched to:', connectFourCurrentPlayer);
                         updateConnectFourTurnInfo();
+                        
+                        // Update Firebase with new turn
+                        if (isFirebaseReady && gameState.roomCode) {
+                            database.ref(`rooms/${gameState.roomCode}/connectFourState`).update({
+                                board: connectFourBoard,
+                                currentPlayer: connectFourCurrentPlayer,
+                                timestamp: Date.now()
+                            });
+                        }
                     }
                     
                     return;
