@@ -4085,10 +4085,10 @@
             xoStateRef.on('value', (snapshot) => {
                 const state = snapshot.val();
                 if (state) {
-                    xoBoard = state.board;
-                    xoCurrentPlayer = state.currentPlayer;
-                    xoGameOver = state.gameOver;
-                    xoPlayers = state.players;
+                    xoBoard = state.board || Array(9).fill(null);
+                    xoCurrentPlayer = state.currentPlayer || 'X';
+                    xoGameOver = state.gameOver || false;
+                    xoPlayers = state.players || { X: null, O: null };
                     
                     updateXOBoard();
                     updateXOTurnInfo();
@@ -4097,7 +4097,15 @@
         }
         
         function makeXOMove(index) {
-            console.log('🎯 XO Move attempted:', index, 'Current:', xoBoard[index], 'Game Over:', xoGameOver);
+            console.log('🎯 XO Move attempted:', index, 'Board:', xoBoard);
+            
+            // Safety check
+            if (!xoBoard || !Array.isArray(xoBoard)) {
+                console.error('❌ xoBoard is not initialized properly:', xoBoard);
+                xoBoard = Array(9).fill(null);
+            }
+            
+            console.log('Current cell value:', xoBoard[index], 'Game Over:', xoGameOver);
             
             if (xoBoard[index] !== null || xoGameOver) {
                 console.log('❌ Move blocked: Cell occupied or game over');
@@ -4181,6 +4189,13 @@
         
         function updateXOBoard() {
             const cells = document.querySelectorAll('.xo-cell');
+            
+            // Safety check
+            if (!xoBoard || !Array.isArray(xoBoard)) {
+                console.error('❌ xoBoard is invalid in updateXOBoard:', xoBoard);
+                xoBoard = Array(9).fill(null);
+            }
+            
             xoBoard.forEach((value, index) => {
                 if (value === 'X') {
                     cells[index].textContent = '❌';
@@ -4343,10 +4358,10 @@
             stateRef.on('value', (snapshot) => {
                 const state = snapshot.val();
                 if (state) {
-                    connectFourBoard = state.board;
-                    connectFourCurrentPlayer = state.currentPlayer;
-                    connectFourGameOver = state.gameOver;
-                    connectFourPlayers = state.players;
+                    connectFourBoard = state.board || Array(42).fill(null);
+                    connectFourCurrentPlayer = state.currentPlayer || '🔴';
+                    connectFourGameOver = state.gameOver || false;
+                    connectFourPlayers = state.players || {};
                     
                     updateConnectFourBoard();
                     updateConnectFourTurnInfo();
@@ -4355,7 +4370,13 @@
         }
         
         function dropConnectFourToken(col) {
-            console.log('🎯 Connect Four drop attempted:', col, 'Game Over:', connectFourGameOver);
+            console.log('🎯 Connect Four drop attempted in column:', col);
+            
+            // Safety check
+            if (!connectFourBoard || !Array.isArray(connectFourBoard)) {
+                console.error('❌ connectFourBoard is not initialized:', connectFourBoard);
+                connectFourBoard = Array(42).fill(null);
+            }
             
             if (connectFourGameOver) {
                 console.log('❌ Drop blocked: Game over');
@@ -4439,6 +4460,13 @@
         
         function updateConnectFourBoard() {
             const cells = document.querySelectorAll('.connect-four-cell');
+            
+            // Safety check
+            if (!connectFourBoard || !Array.isArray(connectFourBoard)) {
+                console.error('❌ connectFourBoard is invalid in update:', connectFourBoard);
+                connectFourBoard = Array(42).fill(null);
+            }
+            
             connectFourBoard.forEach((value, index) => {
                 cells[index].textContent = value || '';
             });
