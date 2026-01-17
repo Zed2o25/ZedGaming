@@ -432,6 +432,249 @@
             font-size: 12px;
             margin-top: 5px;
         }
+
+        /* Chat System */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .chat-toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chat-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .chat-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 400px;
+            height: 500px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-panel.open {
+            transform: translateY(0);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .chat-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8fafc;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            animation: slideInChat 0.3s ease-out;
+        }
+
+        @keyframes slideInChat {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .chat-player-name {
+            font-weight: bold;
+            font-size: 14px;
+            color: #6366f1;
+        }
+
+        .chat-player-name.me {
+            color: #22c55e;
+        }
+
+        .chat-player-name.host {
+            color: #f59e0b;
+        }
+
+        .chat-player-name.observer {
+            color: #94a3b8;
+        }
+
+        .chat-timestamp {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .chat-message-bubble {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .chat-message.me .chat-message-bubble {
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+            border: 1px solid #c7d2fe;
+        }
+
+        .chat-system-message {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            padding: 8px;
+            font-style: italic;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #6366f1;
+            background: #f8fafc;
+        }
+
+        .chat-send-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chat-emoji-btn {
+            width: 45px;
+            height: 45px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-emoji-btn:hover {
+            background: #e2e8f0;
+        }
+
+        @media (max-width: 600px) {
+            .chat-panel {
+                max-width: 100%;
+                height: 60vh;
+            }
+        }
     </style>
 </head>
 <body>
@@ -852,6 +1095,37 @@
         </div>
     </div>
 
+    <!-- Chat System -->
+    <button class="chat-toggle-btn" id="chatToggleBtn" onclick="toggleChat()">
+        💬
+        <span class="chat-badge hidden" id="chatBadge">0</span>
+    </button>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <h3>💬 الدردشة | Chat</h3>
+            <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-system-message">
+                👋 مرحباً! ابدأ المحادثة مع اللاعبين<br>
+                Welcome! Start chatting with players
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <button class="chat-emoji-btn" onclick="insertEmoji()">😊</button>
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="chatInput" 
+                placeholder="اكتب رسالتك... | Type message..."
+                maxlength="200"
+                onkeypress="if(event.key==='Enter') sendChatMessage()"
+            >
+            <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+        </div>
+    </div>
+
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -1045,6 +1319,14 @@
             saveGameState();
             startScoreboardAutoRefresh();
             setupRoomListener();
+            
+            // Setup chat and notify others
+            if (isFirebaseReady) {
+                setTimeout(() => {
+                    setupChatListener();
+                    notifyPlayerJoined();
+                }, 500);
+            }
             
             // Force initial scoreboard update
             setTimeout(() => {
@@ -3117,6 +3399,218 @@
             saveGameState();
         }
 
+        // ============================================
+        // CHAT SYSTEM
+        // ============================================
+        
+        let chatOpen = false;
+        let unreadMessages = 0;
+        let lastChatCheck = Date.now();
+        let chatListener = null;
+        const quickEmojis = ['😊', '😂', '👍', '❤️', '🎮', '🔥', '👏', '🎉'];
+        
+        function toggleChat() {
+            chatOpen = !chatOpen;
+            const panel = document.getElementById('chatPanel');
+            const badge = document.getElementById('chatBadge');
+            
+            if (chatOpen) {
+                panel.classList.add('open');
+                unreadMessages = 0;
+                badge.classList.add('hidden');
+                lastChatCheck = Date.now();
+                
+                // Scroll to bottom
+                const messages = document.getElementById('chatMessages');
+                setTimeout(() => {
+                    messages.scrollTop = messages.scrollHeight;
+                }, 100);
+                
+                // Setup chat listener if not already setup
+                if (!chatListener && isFirebaseReady && gameState.roomCode) {
+                    setupChatListener();
+                }
+            } else {
+                panel.classList.remove('open');
+            }
+        }
+        
+        function setupChatListener() {
+            if (!isFirebaseReady || !gameState.roomCode || chatListener) return;
+            
+            console.log('📡 Setting up chat listener for room:', gameState.roomCode);
+            
+            const chatRef = database.ref(`rooms/${gameState.roomCode}/chat`);
+            
+            chatListener = chatRef.on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                displayChatMessage(message, snapshot.key);
+            });
+            
+            // Load recent messages (last 50)
+            chatRef.orderByChild('timestamp').limitToLast(50).once('value', (snapshot) => {
+                const messagesDiv = document.getElementById('chatMessages');
+                messagesDiv.innerHTML = ''; // Clear welcome message
+                
+                snapshot.forEach((childSnapshot) => {
+                    const message = childSnapshot.val();
+                    displayChatMessage(message, childSnapshot.key, true);
+                });
+                
+                // Scroll to bottom
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            });
+        }
+        
+        function displayChatMessage(message, messageId, isInitial = false) {
+            const messagesDiv = document.getElementById('chatMessages');
+            
+            // Avoid duplicate messages
+            if (document.getElementById(`msg-${messageId}`)) {
+                return;
+            }
+            
+            // Check if this is a new message (for unread badge)
+            if (!isInitial && !chatOpen && message.timestamp > lastChatCheck && message.sender !== gameState.playerName) {
+                unreadMessages++;
+                const badge = document.getElementById('chatBadge');
+                badge.textContent = unreadMessages;
+                badge.classList.remove('hidden');
+            }
+            
+            // System messages
+            if (message.type === 'system') {
+                const systemMsg = document.createElement('div');
+                systemMsg.className = 'chat-system-message';
+                systemMsg.id = `msg-${messageId}`;
+                systemMsg.textContent = message.text;
+                messagesDiv.appendChild(systemMsg);
+            } else {
+                // Regular messages
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message';
+                messageDiv.id = `msg-${messageId}`;
+                
+                const isMe = message.sender === gameState.playerName;
+                if (isMe) {
+                    messageDiv.classList.add('me');
+                }
+                
+                // Determine player role styling
+                let nameClass = 'chat-player-name';
+                let roleIcon = '🎮';
+                
+                if (isMe) {
+                    nameClass += ' me';
+                } else if (message.isHost) {
+                    nameClass += ' host';
+                    roleIcon = '👑';
+                } else if (message.role === 'observer') {
+                    nameClass += ' observer';
+                    roleIcon = '👁️';
+                }
+                
+                // Format timestamp
+                const time = new Date(message.timestamp);
+                const timeStr = time.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.innerHTML = `
+                    <div class="chat-message-header">
+                        <span class="${nameClass}">${roleIcon} ${message.sender}${isMe ? ' (أنت)' : ''}</span>
+                        <span class="chat-timestamp">${timeStr}</span>
+                    </div>
+                    <div class="chat-message-bubble">${escapeHtml(message.text)}</div>
+                `;
+                
+                messagesDiv.appendChild(messageDiv);
+            }
+            
+            // Auto-scroll to bottom if chat is open
+            if (chatOpen) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            if (!gameState.roomCode || !gameState.playerName) {
+                alert('الرجاء الانضمام لغرفة أولاً | Please join a room first');
+                return;
+            }
+            
+            const message = {
+                sender: gameState.playerName,
+                text: text,
+                timestamp: Date.now(),
+                isHost: gameState.isHost,
+                role: gameState.role || 'player'
+            };
+            
+            // Send to Firebase
+            if (isFirebaseReady) {
+                const chatRef = database.ref(`rooms/${gameState.roomCode}/chat`);
+                chatRef.push(message);
+            } else {
+                // Fallback to localStorage
+                const chatKey = `room_${gameState.roomCode}_chat`;
+                let messages = JSON.parse(localStorage.getItem(chatKey) || '[]');
+                
+                // Keep only last 100 messages
+                if (messages.length > 100) {
+                    messages = messages.slice(-100);
+                }
+                
+                messages.push({ ...message, id: Date.now().toString() });
+                localStorage.setItem(chatKey, JSON.stringify(messages));
+                
+                // Display locally
+                displayChatMessage(message, Date.now().toString());
+            }
+            
+            // Clear input
+            input.value = '';
+            
+            console.log('💬 Chat message sent:', text);
+        }
+        
+        function insertEmoji() {
+            const input = document.getElementById('chatInput');
+            const randomEmoji = quickEmojis[Math.floor(Math.random() * quickEmojis.length)];
+            input.value += randomEmoji;
+            input.focus();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function sendSystemMessage(text) {
+            if (!gameState.roomCode) return;
+            
+            const message = {
+                type: 'system',
+                text: text,
+                timestamp: Date.now()
+            };
+            
+            if (isFirebaseReady) {
+                const chatRef = database.ref(`rooms/${gameState.roomCode}/chat`);
+                chatRef.push(message);
+            }
+        }
+        
+        // Send system message when player joins
+        function notifyPlayerJoined() {
+            const roleText = gameState.role === 'observer' ? 'كمراقب | as observer' : 'كلاعب | as player';
+            sendSystemMessage(`👋 ${gameState.playerName} انضم ${roleText} | joined ${roleText}`);
+        }
+
         function updateRoomScores() {
             if (!gameState.roomCode) return;
             
@@ -3410,6 +3904,11 @@
         // Leave room and go back to main screen
         function leaveRoom() {
             if (confirm('هل تريد مغادرة الغرفة؟')) {
+                // Send leave message
+                if (isFirebaseReady && gameState.roomCode) {
+                    sendSystemMessage(`👋 ${gameState.playerName} غادر الغرفة | left the room`);
+                }
+                
                 // Remove player from Firebase
                 if (isFirebaseReady && gameState.roomCode) {
                     const playerRef = database.ref(`rooms/${gameState.roomCode}/players/${gameState.playerName}`);
@@ -3418,6 +3917,13 @@
                     // Stop listening to room updates
                     const roomRef = database.ref(`rooms/${gameState.roomCode}`);
                     roomRef.off();
+                    
+                    // Stop chat listener
+                    if (chatListener) {
+                        const chatRef = database.ref(`rooms/${gameState.roomCode}/chat`);
+                        chatRef.off('child_added', chatListener);
+                        chatListener = null;
+                    }
                 }
                 
                 // Stop auto-refresh
@@ -3428,6 +3934,10 @@
                     clearInterval(numberTimer);
                     numberTimer = null;
                 }
+                
+                // Close chat
+                chatOpen = false;
+                document.getElementById('chatPanel').classList.remove('open');
                 
                 // Clear game state
                 gameState = {
