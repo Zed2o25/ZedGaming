@@ -1,0 +1,27 @@
+# Environment variables and sensitive configuration
+.env
+.env.local
+.env.*.local
+config.js
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
